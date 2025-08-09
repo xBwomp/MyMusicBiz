@@ -1,7 +1,36 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
 import { Piano, Guitar, Mic, Users, GraduationCap, Star } from 'lucide-react';
+import { Program, Offering } from '../types/program';
+import { programService, offeringService } from '../services/programService';
 
 const Programs = () => {
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [offerings, setOfferings] = useState<Offering[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadPrograms();
+  }, []);
+
+  const loadPrograms = async () => {
+    try {
+      const [programsData, offeringsData] = await Promise.all([
+        programService.getActivePrograms(),
+        offeringService.getActiveOfferings()
+      ]);
+      setPrograms(programsData);
+      setOfferings(offeringsData);
+    } catch (error) {
+      console.error('Error loading programs:', error);
+      // Fallback to static data if Firebase isn't configured
+      setPrograms([]);
+      setOfferings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const programs = [
     {
       icon: Piano,
@@ -29,6 +58,24 @@ const Programs = () => {
     },
   ];
 
+  // Use dynamic data if available, otherwise fall back to static data
+  const displayPrograms = programs.length > 0 ? programs.map(program => {
+    const programOfferings = offerings.filter(o => o.programId === program.id);
+    const minPrice = programOfferings.length > 0 
+      ? Math.min(...programOfferings.map(o => o.instructionalFee))
+      : 0;
+    
+    return {
+      icon: program.category === 'private-lessons' ? Piano : 
+            program.category === 'homeschool' ? GraduationCap : Users,
+      title: program.name,
+      description: program.description,
+      features: programOfferings.map(o => o.className).slice(0, 5),
+      price: minPrice > 0 ? `Starting at $${minPrice}` : 'Contact for pricing',
+      popular: program.category === 'homeschool',
+    };
+  }) : staticPrograms;
+
   return (
     <section id="programs" className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -42,7 +89,7 @@ const Programs = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {programs.map((program, index) => (
+          {displayPrograms.map((program, index) => (
             <div
               key={index}
               className={`relative p-8 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
