@@ -9,12 +9,12 @@ const Hero = () => {
           <div className="space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Nurture Musical
-                <span className="text-indigo-600 block">Excellence</span>
+                Band and Beyond
+                <span className="text-indigo-600 block">Musical Excellence</span>
               </h1>
               <p className="text-xl text-gray-600 leading-relaxed">
                 Comprehensive music education through homeschool instruction, private lessons, 
-                and band programs. Personalized learning that grows with your musical journey.
+                and band programs at Hunicker Institute. Personalized learning that grows with your musical journey.
               </p>
             </div>
 

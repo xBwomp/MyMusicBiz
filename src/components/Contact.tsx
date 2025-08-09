@@ -27,8 +27,8 @@ const Contact = () => {
     {
       icon: Mail,
       title: 'Email',
-      details: 'hello@harmonyacademy.com',
-      link: 'mailto:hello@harmonyacademy.com',
+      details: 'info@hunickerinstitute.com',
+      link: 'mailto:info@hunickerinstitute.com',
     },
     {
       icon: Phone,
