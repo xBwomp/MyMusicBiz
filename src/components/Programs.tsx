@@ -31,7 +31,7 @@ const Programs = () => {
     }
   };
 
-  const programs = [
+  const staticPrograms = [
     {
       icon: Piano,
       title: 'Private Lessons',
