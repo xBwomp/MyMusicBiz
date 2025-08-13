@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { Music, Menu, X } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import LoginModal from './auth/LoginModal';
+import UserMenu from './auth/UserMenu';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '#home' },
@@ -37,12 +42,26 @@ const Header = () => {
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
-            <button className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">
-              Login
-            </button>
-            <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium">
-              Get Started
-            </button>
+            {loading ? (
+              <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+            ) : user ? (
+              <UserMenu />
+            ) : (
+              <>
+                <button 
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                >
+                  Login
+                </button>
+                <button 
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
+                >
+                  Get Started
+                </button>
+              </>
+            )}
           </div>
 
           <button
@@ -67,16 +86,35 @@ const Header = () => {
                 </a>
               ))}
               <div className="flex flex-col space-y-2 pt-4 border-t border-gray-200">
-                <button className="text-left text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium">
-                  Login
-                </button>
-                <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium text-left">
-                  Get Started
-                </button>
+                {loading ? (
+                  <div className="animate-pulse bg-gray-200 h-8 w-full rounded"></div>
+                ) : user ? (
+                  <UserMenu />
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => setIsLoginModalOpen(true)}
+                      className="text-left text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                    >
+                      Login
+                    </button>
+                    <button 
+                      onClick={() => setIsLoginModalOpen(true)}
+                      className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium text-left"
+                    >
+                      Get Started
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
         )}
+        
+        <LoginModal 
+          isOpen={isLoginModalOpen} 
+          onClose={() => setIsLoginModalOpen(false)} 
+        />
       </div>
     </header>
   );
