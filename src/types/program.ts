@@ -33,15 +33,18 @@ export interface Offering {
 
 export interface Student {
   id: string;
+  familyId?: string; // Reference to Family
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
-  parentName?: string;
-  parentEmail?: string;
-  parentPhone?: string;
   dateOfBirth?: Date;
+  grade?: string;
+  instrument?: string;
+  skillLevel?: 'beginner' | 'intermediate' | 'advanced';
   enrolledOfferings: string[]; // Array of offering IDs
+  notes?: string;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

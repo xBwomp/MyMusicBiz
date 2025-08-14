@@ -45,7 +45,15 @@ const Header = () => {
             {loading ? (
               <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
             ) : user ? (
-              <UserMenu />
+              <>
+                <a
+                  href="/admin"
+                  className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                >
+                  Admin
+                </a>
+                <UserMenu />
+              </>
             ) : (
               <>
                 <button 
@@ -89,7 +97,16 @@ const Header = () => {
                 {loading ? (
                   <div className="animate-pulse bg-gray-200 h-8 w-full rounded"></div>
                 ) : user ? (
-                  <UserMenu />
+                  <>
+                    <a
+                      href="/admin"
+                      className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Admin
+                    </a>
+                    <UserMenu />
+                  </>
                 ) : (
                   <>
                     <button 
