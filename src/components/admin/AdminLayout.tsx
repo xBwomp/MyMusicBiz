@@ -42,6 +42,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
           <p className="text-gray-600 mb-6">
             You need administrator privileges to access this area. Please contact your system administrator.
           </p>
+          {userProfile && (
+            <div className="mb-4 p-3 bg-gray-100 rounded-lg text-sm">
+              <p><strong>Current Role:</strong> {userProfile.role}</p>
+              <p><strong>Email:</strong> {userProfile.email}</p>
+              <p className="mt-2 text-xs text-gray-500">
+                To become an admin, update your role in the Firestore console or ask an existing admin to promote you.
+              </p>
+            </div>
+          )}
           <button
             onClick={() => window.location.href = '/'}
             className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200"

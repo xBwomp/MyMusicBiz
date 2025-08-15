@@ -30,12 +30,14 @@ export const useAdmin = () => {
       
       // If user doesn't exist in our database, create them
       if (!profile) {
+        console.log('Creating new user profile for:', authUser.email);
         const userId = await userService.createUser({
           email: authUser.email,
           displayName: authUser.displayName || 'Unknown User',
           photoURL: authUser.photoURL || undefined,
           role: 'student', // Default role
         });
+        console.log('Created user with ID:', userId);
         
         profile = {
           id: userId,
@@ -48,6 +50,7 @@ export const useAdmin = () => {
         };
       }
 
+      console.log('User profile loaded:', profile);
       setUserProfile(profile);
       setIsAdmin(profile.role === 'admin');
     } catch (error) {

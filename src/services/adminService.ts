@@ -45,11 +45,13 @@ export const userService = {
 
   async createUser(user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     const now = Timestamp.now();
+    console.log('Creating user in Firestore:', user);
     const docRef = await addDoc(collection(db, 'users'), {
       ...user,
       createdAt: now,
       updatedAt: now,
     });
+    console.log('User created with document ID:', docRef.id);
     return docRef.id;
   },
 
