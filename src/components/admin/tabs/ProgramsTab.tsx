@@ -9,6 +9,13 @@ const ProgramsTab = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newProgram, setNewProgram] = useState<Omit<Program, 'id' | 'createdAt' | 'updatedAt'>>({
+    name: '',
+    description: '',
+    category: 'private-lessons',
+    isActive: true,
+  });
 
   useEffect(() => {
     loadData();
@@ -51,6 +58,23 @@ const ProgramsTab = () => {
     }).format(date);
   };
 
+  const handleCreateProgram = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await programService.createProgram(newProgram);
+      setIsModalOpen(false);
+      setNewProgram({
+        name: '',
+        description: '',
+        category: 'private-lessons',
+        isActive: true,
+      });
+      await loadData();
+    } catch (error) {
+      console.error('Error creating program:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -60,14 +84,18 @@ const ProgramsTab = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Programs & Classes</h2>
           <p className="text-gray-600">Manage your music programs and class offerings</p>
         </div>
-        <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2"
+        >
           <Plus className="h-4 w-4" />
           <span>Add Program</span>
         </button>
@@ -266,7 +294,75 @@ const ProgramsTab = () => {
           </button>
         </div>
       )}
-    </div>
+      </div>
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold mb-4">Add Program</h3>
+            <form onSubmit={handleCreateProgram} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <input
+                  type="text"
+                  value={newProgram.name}
+                  onChange={(e) => setNewProgram({ ...newProgram, name: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  value={newProgram.description}
+                  onChange={(e) => setNewProgram({ ...newProgram, description: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Category</label>
+                <select
+                  value={newProgram.category}
+                  onChange={(e) => setNewProgram({ ...newProgram, category: e.target.value as Program['category'] })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  required
+                >
+                  <option value="private-lessons">Private Lessons</option>
+                  <option value="homeschool">Homeschool</option>
+                  <option value="band">Band</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="isActive"
+                  type="checkbox"
+                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                  checked={newProgram.isActive}
+                  onChange={(e) => setNewProgram({ ...newProgram, isActive: e.target.checked })}
+                />
+                <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">Active</label>
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
