@@ -10,10 +10,22 @@ const ProgramsTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOfferingModalOpen, setIsOfferingModalOpen] = useState(false);
   const [newProgram, setNewProgram] = useState<Omit<Program, 'id' | 'createdAt' | 'updatedAt'>>({
     name: '',
     description: '',
     category: 'private-lessons',
+    isActive: true,
+  });
+  const [newOffering, setNewOffering] = useState<Omit<Offering, 'id' | 'createdAt' | 'updatedAt'>>({
+    programId: '',
+    className: '',
+    term: '',
+    registrationFee: 0,
+    materialsFee: 0,
+    instructionalFee: 0,
+    startDate: new Date(),
+    stopDate: new Date(),
     isActive: true,
   });
 
@@ -72,6 +84,32 @@ const ProgramsTab = () => {
       await loadData();
     } catch (error) {
       console.error('Error creating program:', error);
+    }
+  };
+
+  const openOfferingModal = (programId: string) => {
+    setNewOffering({
+      programId,
+      className: '',
+      term: '',
+      registrationFee: 0,
+      materialsFee: 0,
+      instructionalFee: 0,
+      startDate: new Date(),
+      stopDate: new Date(),
+      isActive: true,
+    });
+    setIsOfferingModalOpen(true);
+  };
+
+  const handleCreateOffering = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await offeringService.createOffering(newOffering);
+      setIsOfferingModalOpen(false);
+      await loadData();
+    } catch (error) {
+      console.error('Error creating offering:', error);
     }
   };
 
@@ -251,20 +289,26 @@ const ProgramsTab = () => {
                     )}
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <button className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-200 transition-colors duration-200 flex items-center space-x-2">
-                      <Plus className="h-4 w-4" />
-                      <span>Add Class Offering</span>
-                    </button>
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <button
+                        onClick={() => openOfferingModal(program.id)}
+                        className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-200 transition-colors duration-200 flex items-center space-x-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>Add Class Offering</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-              
+                )}
+
               {programOfferings.length === 0 && (
                 <div className="border-t border-gray-200 pt-4">
                   <div className="text-center py-4">
                     <p className="text-gray-500 mb-3">No class offerings yet</p>
-                    <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto">
+                    <button
+                      onClick={() => openOfferingModal(program.id)}
+                      className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto"
+                    >
                       <Plus className="h-4 w-4" />
                       <span>Add First Class Offering</span>
                     </button>
@@ -347,6 +391,123 @@ const ProgramsTab = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {isOfferingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold mb-4">Add Class Offering</h3>
+            <form onSubmit={handleCreateOffering} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Class Name</label>
+                <input
+                  type="text"
+                  value={newOffering.className}
+                  onChange={(e) => setNewOffering({ ...newOffering, className: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Term</label>
+                <input
+                  type="text"
+                  value={newOffering.term}
+                  onChange={(e) => setNewOffering({ ...newOffering, term: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                  <input
+                    type="date"
+                    value={newOffering.startDate.toISOString().split('T')[0]}
+                    onChange={(e) => setNewOffering({ ...newOffering, startDate: new Date(e.target.value) })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">End Date</label>
+                  <input
+                    type="date"
+                    value={newOffering.stopDate.toISOString().split('T')[0]}
+                    onChange={(e) => setNewOffering({ ...newOffering, stopDate: new Date(e.target.value) })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Registration Fee</label>
+                  <input
+                    type="number"
+                    value={newOffering.registrationFee}
+                    onChange={(e) => setNewOffering({ ...newOffering, registrationFee: parseFloat(e.target.value) || 0 })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Materials Fee</label>
+                  <input
+                    type="number"
+                    value={newOffering.materialsFee}
+                    onChange={(e) => setNewOffering({ ...newOffering, materialsFee: parseFloat(e.target.value) || 0 })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Instructional Fee</label>
+                  <input
+                    type="number"
+                    value={newOffering.instructionalFee}
+                    onChange={(e) => setNewOffering({ ...newOffering, instructionalFee: parseFloat(e.target.value) || 0 })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Max Students</label>
+                <input
+                  type="number"
+                  value={newOffering.maxStudents ?? ''}
+                  onChange={(e) => setNewOffering({ ...newOffering, maxStudents: e.target.value ? parseInt(e.target.value) : undefined })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                />
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="offeringActive"
+                  type="checkbox"
+                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                  checked={newOffering.isActive}
+                  onChange={(e) => setNewOffering({ ...newOffering, isActive: e.target.checked })}
+                />
+                <label htmlFor="offeringActive" className="ml-2 block text-sm text-gray-700">Active</label>
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsOfferingModalOpen(false)}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
                 >
                   Cancel

@@ -1,15 +1,13 @@
 import { 
   collection, 
   doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  where,
   orderBy,
-  Timestamp 
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { User, Teacher, Family, Schedule, Enrollment } from '../types/admin';
@@ -194,7 +192,7 @@ export const scheduleService = {
 
   async updateSchedule(id: string, updates: Partial<Schedule>): Promise<void> {
     const docRef = doc(db, 'schedules', id);
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       ...updates,
       updatedAt: Timestamp.now(),
     };
@@ -255,7 +253,7 @@ export const enrollmentService = {
 
   async updateEnrollment(id: string, updates: Partial<Enrollment>): Promise<void> {
     const docRef = doc(db, 'enrollments', id);
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       ...updates,
       updatedAt: Timestamp.now(),
     };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, LogOut, Settings, BookOpen, Calendar } from 'lucide-react';
+import { LogOut, Settings, BookOpen, Calendar } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const UserMenu = () => {

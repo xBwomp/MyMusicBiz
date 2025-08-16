@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Music, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import LoginModal from './auth/LoginModal';
 import UserMenu from './auth/UserMenu';

@@ -1,13 +1,12 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { Piano, Guitar, Mic, Users, GraduationCap, Star } from 'lucide-react';
+import { Piano, Users, GraduationCap, Star } from 'lucide-react';
 import { Program, Offering } from '../types/program';
 import { programService, offeringService } from '../services/programService';
 
 const Programs = () => {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [offerings, setOfferings] = useState<Offering[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadPrograms();
@@ -26,8 +25,6 @@ const Programs = () => {
       // Fallback to static data if Firebase isn't configured
       setPrograms([]);
       setOfferings([]);
-    } finally {
-      setLoading(false);
     }
   };
 
