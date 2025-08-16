@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Chrome } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 interface LoginModalProps {

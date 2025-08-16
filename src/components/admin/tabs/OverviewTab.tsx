@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, BookOpen, Calendar, DollarSign, TrendingUp, AlertCircle } from 'lucide-react';
-import { programService, offeringService, studentService } from '../../../services/programService';
+import { programService, studentService } from '../../../services/programService';
 import { enrollmentService } from '../../../services/adminService';
 
 const OverviewTab = () => {
