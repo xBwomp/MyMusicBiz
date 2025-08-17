@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import OverviewTab from './tabs/OverviewTab';
 import ProgramsTab from './tabs/ProgramsTab';
@@ -11,7 +12,13 @@ import FinancesTab from './tabs/FinancesTab';
 import SettingsTab from './tabs/SettingsTab';
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'overview';
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    setSearchParams({ tab: activeTab });
+  }, [activeTab, setSearchParams]);
 
   const renderTabContent = () => {
     switch (activeTab) {
