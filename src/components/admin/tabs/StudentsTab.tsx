@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Mail, Phone, Calendar } from 'lucide-react';
 import { Student } from '../../../types/program';
 import { studentService } from '../../../services/programService';
-import AddStudentModal from '../modals/AddStudentModal';
+import StudentModal from '../modals/StudentModal';
 
 const StudentsTab = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
   useEffect(() => {
     loadStudents();
@@ -71,7 +72,10 @@ const StudentsTab = () => {
           <p className="text-gray-600">Manage student profiles and information</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => {
+            setEditingStudent(null);
+            setShowModal(true);
+          }}
           className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2"
         >
           <Plus className="h-4 w-4" />
@@ -182,7 +186,13 @@ const StudentsTab = () => {
               </div>
 
               <div className="flex space-x-2">
-                <button className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200">
+                <button
+                  onClick={() => {
+                    setEditingStudent(student);
+                    setShowModal(true);
+                  }}
+                  className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200"
+                >
                   <Edit className="h-4 w-4" />
                 </button>
                 <button className="p-2 text-gray-400 hover:text-red-600 transition-colors duration-200">
@@ -207,7 +217,10 @@ const StudentsTab = () => {
             }
           </p>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setEditingStudent(null);
+              setShowModal(true);
+            }}
             className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto"
           >
             <Plus className="h-5 w-5" />
@@ -215,10 +228,11 @@ const StudentsTab = () => {
           </button>
         </div>
       )}
-      {showAddModal && (
-        <AddStudentModal
-          onClose={() => setShowAddModal(false)}
-          onCreated={loadStudents}
+      {showModal && (
+        <StudentModal
+          student={editingStudent || undefined}
+          onClose={() => setShowModal(false)}
+          onSaved={loadStudents}
         />
       )}
     </div>
