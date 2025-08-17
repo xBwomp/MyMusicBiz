@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Mail, Phone, Calendar } from 'lucide-react';
 import { Student } from '../../../types/program';
 import { studentService } from '../../../services/programService';
+import AddStudentModal from '../modals/AddStudentModal';
 
 const StudentsTab = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     loadStudents();
@@ -68,7 +70,10 @@ const StudentsTab = () => {
           <h2 className="text-2xl font-bold text-gray-900">Students</h2>
           <p className="text-gray-600">Manage student profiles and information</p>
         </div>
-        <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2"
+        >
           <Plus className="h-4 w-4" />
           <span>Add Student</span>
         </button>
@@ -197,11 +202,20 @@ const StudentsTab = () => {
               : 'Get started by adding your first student.'
             }
           </p>
-          <button className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto"
+          >
             <Plus className="h-5 w-5" />
             <span>Add First Student</span>
           </button>
         </div>
+      )}
+      {showAddModal && (
+        <AddStudentModal
+          onClose={() => setShowAddModal(false)}
+          onCreated={loadStudents}
+        />
       )}
     </div>
   );

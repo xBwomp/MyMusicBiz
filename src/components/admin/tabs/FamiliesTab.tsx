@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Mail, Phone, MapPin, Users } from 'lucide-react';
 import { Family } from '../../../types/admin';
 import { familyService } from '../../../services/adminService';
+import AddFamilyModal from '../modals/AddFamilyModal';
 
 const FamiliesTab = () => {
   const [families, setFamilies] = useState<Family[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     loadFamilies();
@@ -57,7 +59,10 @@ const FamiliesTab = () => {
           <h2 className="text-2xl font-bold text-gray-900">Families</h2>
           <p className="text-gray-600">Manage family profiles and contact information</p>
         </div>
-        <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2"
+        >
           <Plus className="h-4 w-4" />
           <span>Add Family</span>
         </button>
@@ -103,12 +108,22 @@ const FamiliesTab = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <Mail className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">{family.primaryContactEmail}</span>
+                      <a
+                        href={`mailto:${family.primaryContactEmail}`}
+                        className="text-sm text-indigo-600 hover:underline"
+                      >
+                        {family.primaryContactEmail}
+                      </a>
                     </div>
                     {family.primaryContactPhone && (
                       <div className="flex items-center space-x-2">
                         <Phone className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-600">{family.primaryContactPhone}</span>
+                        <a
+                          href={`tel:${family.primaryContactPhone}`}
+                          className="text-sm text-indigo-600 hover:underline"
+                        >
+                          {family.primaryContactPhone}
+                        </a>
                       </div>
                     )}
                   </div>
@@ -128,13 +143,23 @@ const FamiliesTab = () => {
                       {family.secondaryContactEmail && (
                         <div className="flex items-center space-x-2">
                           <Mail className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm text-gray-600">{family.secondaryContactEmail}</span>
+                          <a
+                            href={`mailto:${family.secondaryContactEmail}`}
+                            className="text-sm text-indigo-600 hover:underline"
+                          >
+                            {family.secondaryContactEmail}
+                          </a>
                         </div>
                       )}
                       {family.secondaryContactPhone && (
                         <div className="flex items-center space-x-2">
                           <Phone className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm text-gray-600">{family.secondaryContactPhone}</span>
+                          <a
+                            href={`tel:${family.secondaryContactPhone}`}
+                            className="text-sm text-indigo-600 hover:underline"
+                          >
+                            {family.secondaryContactPhone}
+                          </a>
                         </div>
                       )}
                     </div>
@@ -210,11 +235,20 @@ const FamiliesTab = () => {
               : 'Get started by adding your first family.'
             }
           </p>
-          <button className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto"
+          >
             <Plus className="h-5 w-5" />
             <span>Add First Family</span>
           </button>
         </div>
+      )}
+      {showAddModal && (
+        <AddFamilyModal
+          onClose={() => setShowAddModal(false)}
+          onCreated={loadFamilies}
+        />
       )}
     </div>
   );
