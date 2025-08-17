@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Mail, Phone, MapPin, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Family } from '../../../types/admin';
 import { Student } from '../../../types/program';
 import { familyService } from '../../../services/adminService';
 import { studentService } from '../../../services/programService';
 import FamilyModal from '../modals/FamilyModal';
+import StudentViewModal from '../modals/StudentViewModal';
 
 const FamiliesTab = () => {
   const [families, setFamilies] = useState<Family[]>([]);
@@ -15,6 +15,8 @@ const FamiliesTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingFamily, setEditingFamily] = useState<Family | null>(null);
+  const [showStudentModal, setShowStudentModal] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   useEffect(() => {
     loadFamilies();
@@ -47,6 +49,21 @@ const FamiliesTab = () => {
     }
   };
 
+  const handleStudentClick = (studentId: string) => {
+    setSelectedStudentId(studentId);
+    setShowStudentModal(true);
+  };
+
+  const handleStudentModalClose = () => {
+    setShowStudentModal(false);
+    setSelectedStudentId(null);
+  };
+
+  const handleStudentUpdated = () => {
+    // Reload both families and students data to reflect any changes
+    loadFamilies();
+    loadStudents();
+  };
   const filteredFamilies = families.filter(family => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -205,33 +222,33 @@ const FamiliesTab = () => {
                   </div>
                 )}
 
-                  {/* Students */}
-                  {family.students.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-900 mb-2">Students</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {family.students.map((studentId, index) => {
-                          const student = students[studentId];
-                          return student ? (
-                            <Link
-                              key={index}
-                              to={`/admin?tab=students#student-${student.id}`}
-                              className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium hover:underline"
-                            >
-                              {student.firstName}
-                            </Link>
-                          ) : (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
-                            >
-                              Student ID: {studentId.slice(-6)}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                 {/* Students */}
+                 {family.students.length > 0 && (
+                   <div className="mb-4">
+                     <h4 className="text-sm font-medium text-gray-900 mb-2">Students</h4>
+                     <div className="flex flex-wrap gap-2">
+                       {family.students.map((studentId, index) => {
+                         const student = students[studentId];
+                         return student ? (
+                           <button
+                             key={index}
+                             onClick={() => handleStudentClick(student.id)}
+                             className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium hover:bg-blue-200 transition-colors duration-200 cursor-pointer"
+                           >
+                             {student.firstName} {student.lastName}
+                           </button>
+                         ) : (
+                           <span
+                             key={index}
+                             className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium"
+                           >
+                             Student ID: {studentId.slice(-6)}
+                           </span>
+                         );
+                       })}
+                     </div>
+                   </div>
+                 )}
 
                 {/* Notes */}
                 {family.notes && (
@@ -289,11 +306,22 @@ const FamiliesTab = () => {
           </button>
         </div>
       )}
+      
+      {/* Family Modal */}
       {showModal && (
         <FamilyModal
           family={editingFamily || undefined}
           onClose={() => setShowModal(false)}
           onSaved={loadFamilies}
+        />
+      )}
+      
+      {/* Student View Modal */}
+      {showStudentModal && selectedStudentId && (
+        <StudentViewModal
+          studentId={selectedStudentId}
+          onClose={handleStudentModalClose}
+          onStudentUpdated={handleStudentUpdated}
         />
       )}
     </div>
