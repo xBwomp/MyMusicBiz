@@ -11,7 +11,7 @@ export const useAdmin = () => {
 
   useEffect(() => {
     if (authLoading) return;
-    
+
     if (!authUser) {
       setUserProfile(null);
       setIsAdmin(false);
@@ -20,6 +20,7 @@ export const useAdmin = () => {
     }
 
     loadUserProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser, authLoading]);
 
   const loadUserProfile = async () => {
@@ -35,7 +36,7 @@ export const useAdmin = () => {
           email: authUser.email,
           displayName: authUser.displayName || 'Unknown User',
           photoURL: authUser.photoURL || undefined,
-          role: 'student', // Default role
+          role: 'parent', // Default role
         });
         console.log('Created user with ID:', userId);
         
@@ -44,7 +45,7 @@ export const useAdmin = () => {
           email: authUser.email,
           displayName: authUser.displayName || 'Unknown User',
           photoURL: authUser.photoURL || undefined,
-          role: 'student',
+          role: 'parent',
           createdAt: new Date(),
           updatedAt: new Date(),
         };
