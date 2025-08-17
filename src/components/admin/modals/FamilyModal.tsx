@@ -1,34 +1,59 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { familyService } from '../../../services/adminService';
+import { Family } from '../../../types/admin';
 
-interface AddFamilyModalProps {
+interface FamilyModalProps {
+  family?: Family;
   onClose: () => void;
-  onCreated: () => void;
+  onSaved: () => void;
 }
 
-const AddFamilyModal: React.FC<AddFamilyModalProps> = ({ onClose, onCreated }) => {
-  const [familyName, setFamilyName] = useState('');
-  const [primaryContactName, setPrimaryContactName] = useState('');
-  const [primaryContactEmail, setPrimaryContactEmail] = useState('');
-  const [primaryContactPhone, setPrimaryContactPhone] = useState('');
+const FamilyModal: React.FC<FamilyModalProps> = ({ family, onClose, onSaved }) => {
+  const [familyName, setFamilyName] = useState(family?.familyName || '');
+  const [primaryContactName, setPrimaryContactName] = useState(family?.primaryContactName || '');
+  const [primaryContactEmail, setPrimaryContactEmail] = useState(family?.primaryContactEmail || '');
+  const [primaryContactPhone, setPrimaryContactPhone] = useState(family?.primaryContactPhone || '');
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (family) {
+      setFamilyName(family.familyName);
+      setPrimaryContactName(family.primaryContactName);
+      setPrimaryContactEmail(family.primaryContactEmail);
+      setPrimaryContactPhone(family.primaryContactPhone || '');
+    } else {
+      setFamilyName('');
+      setPrimaryContactName('');
+      setPrimaryContactEmail('');
+      setPrimaryContactPhone('');
+    }
+  }, [family]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await familyService.createFamily({
-        familyName,
-        primaryContactName,
-        primaryContactEmail,
-        primaryContactPhone: primaryContactPhone || undefined,
-        students: [],
-      });
-      onCreated();
+      if (family) {
+        await familyService.updateFamily(family.id, {
+          familyName,
+          primaryContactName,
+          primaryContactEmail,
+          primaryContactPhone: primaryContactPhone || undefined,
+        });
+      } else {
+        await familyService.createFamily({
+          familyName,
+          primaryContactName,
+          primaryContactEmail,
+          primaryContactPhone: primaryContactPhone || undefined,
+          students: [],
+        });
+      }
+      onSaved();
       onClose();
     } catch (error) {
-      console.error('Error creating family:', error);
+      console.error('Error saving family:', error);
     } finally {
       setSaving(false);
     }
@@ -38,7 +63,7 @@ const AddFamilyModal: React.FC<AddFamilyModalProps> = ({ onClose, onCreated }) =
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Add Family</h3>
+          <h3 className="text-lg font-semibold">{family ? 'Edit Family' : 'Add Family'}</h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X className="h-5 w-5" />
           </button>
@@ -96,7 +121,7 @@ const AddFamilyModal: React.FC<AddFamilyModalProps> = ({ onClose, onCreated }) =
               disabled={saving}
               className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
             >
-              {saving ? 'Saving...' : 'Create'}
+              {saving ? 'Saving...' : family ? 'Save' : 'Create'}
             </button>
           </div>
         </form>
@@ -105,4 +130,4 @@ const AddFamilyModal: React.FC<AddFamilyModalProps> = ({ onClose, onCreated }) =
   );
 };
 
-export default AddFamilyModal;
+export default FamilyModal;

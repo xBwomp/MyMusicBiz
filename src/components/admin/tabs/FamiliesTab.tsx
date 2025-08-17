@@ -5,7 +5,7 @@ import { Family } from '../../../types/admin';
 import { Student } from '../../../types/program';
 import { familyService } from '../../../services/adminService';
 import { studentService } from '../../../services/programService';
-import AddFamilyModal from '../modals/AddFamilyModal';
+import FamilyModal from '../modals/FamilyModal';
 
 const FamiliesTab = () => {
   const [families, setFamilies] = useState<Family[]>([]);
@@ -13,7 +13,8 @@ const FamiliesTab = () => {
   const [students, setStudents] = useState<Record<string, Student>>({});
   const [studentsLoading, setStudentsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editingFamily, setEditingFamily] = useState<Family | null>(null);
 
   useEffect(() => {
     loadFamilies();
@@ -81,7 +82,10 @@ const FamiliesTab = () => {
           <p className="text-gray-600">Manage family profiles and contact information</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => {
+            setEditingFamily(null);
+            setShowModal(true);
+          }}
           className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2"
         >
           <Plus className="h-4 w-4" />
@@ -243,7 +247,13 @@ const FamiliesTab = () => {
               </div>
 
               <div className="flex space-x-2">
-                <button className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200">
+                <button
+                  onClick={() => {
+                    setEditingFamily(family);
+                    setShowModal(true);
+                  }}
+                  className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200"
+                >
                   <Edit className="h-4 w-4" />
                 </button>
                 <button className="p-2 text-gray-400 hover:text-red-600 transition-colors duration-200">
@@ -262,13 +272,16 @@ const FamiliesTab = () => {
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No families found</h3>
           <p className="text-gray-500 mb-6">
-            {searchTerm 
+            {searchTerm
               ? 'Try adjusting your search criteria.'
               : 'Get started by adding your first family.'
             }
           </p>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setEditingFamily(null);
+              setShowModal(true);
+            }}
             className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto"
           >
             <Plus className="h-5 w-5" />
@@ -276,10 +289,11 @@ const FamiliesTab = () => {
           </button>
         </div>
       )}
-      {showAddModal && (
-        <AddFamilyModal
-          onClose={() => setShowAddModal(false)}
-          onCreated={loadFamilies}
+      {showModal && (
+        <FamilyModal
+          family={editingFamily || undefined}
+          onClose={() => setShowModal(false)}
+          onSaved={loadFamilies}
         />
       )}
     </div>

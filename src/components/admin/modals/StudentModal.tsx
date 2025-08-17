@@ -3,19 +3,35 @@ import { X } from 'lucide-react';
 import { studentService } from '../../../services/programService';
 import { familyService } from '../../../services/adminService';
 import { Family } from '../../../types/admin';
+import { Student } from '../../../types/program';
 
-interface AddStudentModalProps {
+interface StudentModalProps {
+  student?: Student;
   onClose: () => void;
-  onCreated: () => void;
+  onSaved: () => void;
 }
 
-const AddStudentModal: React.FC<AddStudentModalProps> = ({ onClose, onCreated }) => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [familyId, setFamilyId] = useState('');
+const StudentModal: React.FC<StudentModalProps> = ({ student, onClose, onSaved }) => {
+  const [firstName, setFirstName] = useState(student?.firstName || '');
+  const [lastName, setLastName] = useState(student?.lastName || '');
+  const [email, setEmail] = useState(student?.email || '');
+  const [familyId, setFamilyId] = useState(student?.familyId || '');
   const [families, setFamilies] = useState<Family[]>([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (student) {
+      setFirstName(student.firstName);
+      setLastName(student.lastName);
+      setEmail(student.email);
+      setFamilyId(student.familyId || '');
+    } else {
+      setFirstName('');
+      setLastName('');
+      setEmail('');
+      setFamilyId('');
+    }
+  }, [student]);
 
   useEffect(() => {
     const loadFamilies = async () => {
@@ -33,24 +49,49 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ onClose, onCreated })
     e.preventDefault();
     setSaving(true);
     try {
-      const studentId = await studentService.createStudent({
-        firstName,
-        lastName,
-        email,
-        familyId: familyId || undefined,
-        enrolledOfferings: [],
-        isActive: true,
-      });
-      if (familyId) {
-        const family = families.find(f => f.id === familyId);
-        await familyService.updateFamily(familyId, {
-          students: [...(family?.students || []), studentId],
+      if (student) {
+        await studentService.updateStudent(student.id, {
+          firstName,
+          lastName,
+          email,
+          familyId: familyId || undefined,
         });
+
+        if (student.familyId !== familyId) {
+          if (student.familyId) {
+            const oldFamily = families.find(f => f.id === student.familyId);
+            await familyService.updateFamily(student.familyId, {
+              students: (oldFamily?.students || []).filter(id => id !== student.id),
+            });
+          }
+          if (familyId) {
+            const newFamily = families.find(f => f.id === familyId);
+            await familyService.updateFamily(familyId, {
+              students: [...(newFamily?.students || []), student.id],
+            });
+          }
+        }
+      } else {
+        const studentId = await studentService.createStudent({
+          firstName,
+          lastName,
+          email,
+          familyId: familyId || undefined,
+          enrolledOfferings: [],
+          isActive: true,
+        });
+        if (familyId) {
+          const family = families.find(f => f.id === familyId);
+          await familyService.updateFamily(familyId, {
+            students: [...(family?.students || []), studentId],
+          });
+        }
       }
-      onCreated();
+
+      onSaved();
       onClose();
     } catch (error) {
-      console.error('Error creating student:', error);
+      console.error('Error saving student:', error);
     } finally {
       setSaving(false);
     }
@@ -60,7 +101,7 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ onClose, onCreated })
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Add Student</h3>
+          <h3 className="text-lg font-semibold">{student ? 'Edit Student' : 'Add Student'}</h3>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X className="h-5 w-5" />
           </button>
@@ -124,7 +165,7 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ onClose, onCreated })
               disabled={saving}
               className="px-4 py-2 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
             >
-              {saving ? 'Saving...' : 'Create'}
+              {saving ? 'Saving...' : student ? 'Save' : 'Create'}
             </button>
           </div>
         </form>
@@ -133,4 +174,4 @@ const AddStudentModal: React.FC<AddStudentModalProps> = ({ onClose, onCreated })
   );
 };
 
-export default AddStudentModal;
+export default StudentModal;
