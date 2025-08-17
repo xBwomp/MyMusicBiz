@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit, Save, Cancel, Mail, Phone, Calendar, User, BookOpen } from 'lucide-react';
+import { X, Edit, Save, Ambulance as Cancel, Mail, Phone, Calendar, User, BookOpen } from 'lucide-react';
 import { Student } from '../../../types/program';
 import { Family } from '../../../types/admin';
 import { studentService } from '../../../services/programService';
