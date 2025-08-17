@@ -94,9 +94,13 @@ const StudentsTab = () => {
       </div>
 
       {/* Students Grid */}
-      <div className="grid gap-6">
-        {filteredStudents.map((student) => (
-          <div key={student.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="grid gap-6">
+          {filteredStudents.map((student) => (
+            <div
+              key={student.id}
+              id={`student-${student.id}`}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+            >
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-3">

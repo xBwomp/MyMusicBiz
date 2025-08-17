@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Mail, Phone, MapPin, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Family } from '../../../types/admin';
+import { Student } from '../../../types/program';
 import { familyService } from '../../../services/adminService';
+import { studentService } from '../../../services/programService';
 import AddFamilyModal from '../modals/AddFamilyModal';
 
 const FamiliesTab = () => {
   const [families, setFamilies] = useState<Family[]>([]);
   const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState<Record<string, Student>>({});
+  const [studentsLoading, setStudentsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     loadFamilies();
+    loadStudents();
   }, []);
 
   const loadFamilies = async () => {
@@ -22,6 +28,21 @@ const FamiliesTab = () => {
       console.error('Error loading families:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadStudents = async () => {
+    try {
+      const studentsData = await studentService.getStudents();
+      const studentMap: Record<string, Student> = {};
+      studentsData.forEach(student => {
+        studentMap[student.id] = student;
+      });
+      setStudents(studentMap);
+    } catch (error) {
+      console.error('Error loading students:', error);
+    } finally {
+      setStudentsLoading(false);
     }
   };
 
@@ -43,7 +64,7 @@ const FamiliesTab = () => {
     }).format(date);
   };
 
-  if (loading) {
+  if (loading || studentsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -180,22 +201,33 @@ const FamiliesTab = () => {
                   </div>
                 )}
 
-                {/* Students */}
-                {family.students.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">Students</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {family.students.map((studentId, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
-                        >
-                          Student ID: {studentId.slice(-6)}
-                        </span>
-                      ))}
+                  {/* Students */}
+                  {family.students.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">Students</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {family.students.map((studentId, index) => {
+                          const student = students[studentId];
+                          return student ? (
+                            <Link
+                              key={index}
+                              to={`/admin?tab=students#student-${student.id}`}
+                              className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium hover:underline"
+                            >
+                              {student.firstName}
+                            </Link>
+                          ) : (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
+                            >
+                              Student ID: {studentId.slice(-6)}
+                            </span>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Notes */}
                 {family.notes && (
