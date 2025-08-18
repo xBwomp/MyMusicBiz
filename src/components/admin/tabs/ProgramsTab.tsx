@@ -11,7 +11,8 @@ const ProgramsTab = () => {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOfferingModalOpen, setIsOfferingModalOpen] = useState(false);
-  const [newProgram, setNewProgram] = useState<Omit<Program, 'id' | 'createdAt' | 'updatedAt'>>({
+  const [editingProgram, setEditingProgram] = useState<Program | null>(null);
+  const [programForm, setProgramForm] = useState<Omit<Program, 'id' | 'createdAt' | 'updatedAt'>>({
     name: '',
     description: '',
     category: 'private-lessons',
@@ -70,12 +71,17 @@ const ProgramsTab = () => {
     }).format(date);
   };
 
-  const handleCreateProgram = async (e: React.FormEvent) => {
+  const handleSaveProgram = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await programService.createProgram(newProgram);
+      if (editingProgram) {
+        await programService.updateProgram(editingProgram.id, programForm);
+      } else {
+        await programService.createProgram(programForm);
+      }
       setIsModalOpen(false);
-      setNewProgram({
+      setEditingProgram(null);
+      setProgramForm({
         name: '',
         description: '',
         category: 'private-lessons',
@@ -83,7 +89,7 @@ const ProgramsTab = () => {
       });
       await loadData();
     } catch (error) {
-      console.error('Error creating program:', error);
+      console.error('Error saving program:', error);
     }
   };
 
@@ -131,7 +137,16 @@ const ProgramsTab = () => {
           <p className="text-gray-600">Manage your music programs and class offerings</p>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setEditingProgram(null);
+            setProgramForm({
+              name: '',
+              description: '',
+              category: 'private-lessons',
+              isActive: true,
+            });
+            setIsModalOpen(true);
+          }}
           className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2"
         >
           <Plus className="h-4 w-4" />
@@ -219,7 +234,19 @@ const ProgramsTab = () => {
                 </div>
                 
                 <div className="flex space-x-2">
-                  <button className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200">
+                  <button
+                    onClick={() => {
+                      setEditingProgram(program);
+                      setProgramForm({
+                        name: program.name,
+                        description: program.description,
+                        category: program.category,
+                        isActive: program.isActive,
+                      });
+                      setIsModalOpen(true);
+                    }}
+                    className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200"
+                  >
                     <Edit className="h-4 w-4" />
                   </button>
                   <button className="p-2 text-gray-400 hover:text-red-600 transition-colors duration-200">
@@ -332,7 +359,19 @@ const ProgramsTab = () => {
               : 'Get started by creating your first music program.'
             }
           </p>
-          <button className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto">
+          <button
+            onClick={() => {
+              setEditingProgram(null);
+              setProgramForm({
+                name: '',
+                description: '',
+                category: 'private-lessons',
+                isActive: true,
+              });
+              setIsModalOpen(true);
+            }}
+            className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto"
+          >
             <Plus className="h-5 w-5" />
             <span>Create First Program</span>
           </button>
@@ -342,14 +381,16 @@ const ProgramsTab = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold mb-4">Add Program</h3>
-            <form onSubmit={handleCreateProgram} className="space-y-4">
+            <h3 className="text-lg font-semibold mb-4">
+              {editingProgram ? 'Edit Program' : 'Add Program'}
+            </h3>
+            <form onSubmit={handleSaveProgram} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Name</label>
                 <input
                   type="text"
-                  value={newProgram.name}
-                  onChange={(e) => setNewProgram({ ...newProgram, name: e.target.value })}
+                  value={programForm.name}
+                  onChange={(e) => setProgramForm({ ...programForm, name: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   required
                 />
@@ -357,8 +398,8 @@ const ProgramsTab = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
                 <textarea
-                  value={newProgram.description}
-                  onChange={(e) => setNewProgram({ ...newProgram, description: e.target.value })}
+                  value={programForm.description}
+                  onChange={(e) => setProgramForm({ ...programForm, description: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   required
                 />
@@ -366,8 +407,8 @@ const ProgramsTab = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Category</label>
                 <select
-                  value={newProgram.category}
-                  onChange={(e) => setNewProgram({ ...newProgram, category: e.target.value as Program['category'] })}
+                  value={programForm.category}
+                  onChange={(e) => setProgramForm({ ...programForm, category: e.target.value as Program['category'] })}
                   className="mt-1 block w-full border border-gray-300 rounded-md p-2"
                   required
                 >
@@ -382,15 +423,24 @@ const ProgramsTab = () => {
                   id="isActive"
                   type="checkbox"
                   className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                  checked={newProgram.isActive}
-                  onChange={(e) => setNewProgram({ ...newProgram, isActive: e.target.checked })}
+                  checked={programForm.isActive}
+                  onChange={(e) => setProgramForm({ ...programForm, isActive: e.target.checked })}
                 />
                 <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">Active</label>
               </div>
               <div className="flex justify-end space-x-2 pt-4">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setEditingProgram(null);
+                    setProgramForm({
+                      name: '',
+                      description: '',
+                      category: 'private-lessons',
+                      isActive: true,
+                    });
+                  }}
                   className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
                 >
                   Cancel
