@@ -21,8 +21,8 @@ const Programs = () => {
       setPrograms(programsData);
       setOfferings(offeringsData);
     } catch (error) {
-      console.error('Error loading programs:', error);
-      // Fallback to static data if Firebase isn't configured
+      // Silently fallback to static data if Firebase query fails
+      // This can happen when Firestore indexes haven't been deployed yet
       setPrograms([]);
       setOfferings([]);
     }
