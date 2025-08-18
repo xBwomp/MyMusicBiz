@@ -40,6 +40,10 @@ export interface Family {
   };
   students: string[]; // Array of student IDs
   notes?: string;
+  status?: string; // Family status (active, inactive)
+  statusChangedAt?: Date;
+  statusChangedBy?: string;
+  statusChangeReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }

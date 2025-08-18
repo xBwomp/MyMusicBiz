@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Mail, Phone, MapPin, Users } from 'lucide-react';
 import { Family } from '../../../types/admin';
+import { FamilyStatus } from '../../../types/status';
 import { Student } from '../../../types/program';
 import { familyService } from '../../../services/adminService';
 import { studentService } from '../../../services/programService';
 import FamilyModal from '../modals/FamilyModal';
 import StudentViewModal from '../modals/StudentViewModal';
+import StatusDropdown from '../../common/StatusDropdown';
+import StatusHistory from '../../common/StatusHistory';
 
 const FamiliesTab = () => {
   const [families, setFamilies] = useState<Family[]>([]);
@@ -17,6 +20,7 @@ const FamiliesTab = () => {
   const [editingFamily, setEditingFamily] = useState<Family | null>(null);
   const [showStudentModal, setShowStudentModal] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [showStatusHistory, setShowStatusHistory] = useState<string | null>(null);
 
   useEffect(() => {
     loadFamilies();
@@ -65,6 +69,11 @@ const FamiliesTab = () => {
     loadStudents();
   };
   const filteredFamilies = families.filter(family => {
+  const handleFamilyStatusChange = async (familyId: string, newStatus: string) => {
+    // Reload families to reflect the status change
+    await loadFamilies();
+  };
+
     const searchLower = searchTerm.toLowerCase();
     return (
       family.familyName.toLowerCase().includes(searchLower) ||
@@ -136,7 +145,24 @@ const FamiliesTab = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900">{family.familyName} Family</h3>
-                    <p className="text-sm text-gray-600">{family.students.length} student(s)</p>
+                    <div className="flex items-center space-x-3 mt-1">
+                      <p className="text-sm text-gray-600">{family.students.length} student(s)</p>
+                      <StatusDropdown
+                        entityType="family"
+                        entityId={family.id}
+                        currentStatus={(family.status as FamilyStatus) || 'active'}
+                        onStatusChange={(newStatus) => handleFamilyStatusChange(family.id, newStatus)}
+                        size="sm"
+                      />
+                      <button
+                        onClick={() => setShowStatusHistory(
+                          showStatusHistory === family.id ? null : family.id
+                        )}
+                        className="text-xs text-indigo-600 hover:text-indigo-700"
+                      >
+                        {showStatusHistory === family.id ? 'Hide History' : 'Status History'}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -261,6 +287,17 @@ const FamiliesTab = () => {
                 <div className="text-xs text-gray-500">
                   Created: {formatDate(family.createdAt)}
                 </div>
+
+                {/* Status History */}
+                {showStatusHistory === family.id && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <StatusHistory
+                      entityType="family"
+                      entityId={family.id}
+                      maxEntries={3}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex space-x-2">

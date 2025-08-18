@@ -45,6 +45,10 @@ export interface Student {
   enrolledOfferings: string[]; // Array of offering IDs
   notes?: string;
   isActive: boolean;
+  status?: string; // Student status (active, inactive, graduated, etc.)
+  statusChangedAt?: Date;
+  statusChangedBy?: string;
+  statusChangeReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }

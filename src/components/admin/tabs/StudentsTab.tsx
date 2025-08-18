@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Mail, Phone, Calendar } from 'lucide-react';
 import { Student } from '../../../types/program';
+import { StudentStatus } from '../../../types/status';
 import { studentService } from '../../../services/programService';
 import StudentModal from '../modals/StudentModal';
+import StatusDropdown from '../../common/StatusDropdown';
+import StatusHistory from '../../common/StatusHistory';
 
 const StudentsTab = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -10,6 +13,7 @@ const StudentsTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [showStatusHistory, setShowStatusHistory] = useState<string | null>(null);
 
   useEffect(() => {
     loadStudents();
@@ -53,6 +57,11 @@ const StudentsTab = () => {
       return age - 1;
     }
     return age;
+  };
+
+  const handleStatusChange = async (studentId: string, newStatus: string) => {
+    // Reload students to reflect the status change
+    await loadStudents();
   };
 
   if (loading) {
@@ -117,7 +126,7 @@ const StudentsTab = () => {
                     <h3 className="text-xl font-semibold text-gray-900">
                       {student.firstName} {student.lastName}
                     </h3>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
                       {student.grade && (
                         <span>Grade {student.grade}</span>
                       )}
@@ -127,6 +136,23 @@ const StudentsTab = () => {
                       {student.skillLevel && (
                         <span className="capitalize">{student.skillLevel}</span>
                       )}
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <StatusDropdown
+                        entityType="student"
+                        entityId={student.id}
+                        currentStatus={(student.status as StudentStatus) || 'active'}
+                        onStatusChange={(newStatus) => handleStatusChange(student.id, newStatus)}
+                        size="sm"
+                      />
+                      <button
+                        onClick={() => setShowStatusHistory(
+                          showStatusHistory === student.id ? null : student.id
+                        )}
+                        className="text-xs text-indigo-600 hover:text-indigo-700"
+                      >
+                        {showStatusHistory === student.id ? 'Hide History' : 'View History'}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -173,16 +199,20 @@ const StudentsTab = () => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="text-xs text-gray-500">
                   <span>Created: {formatDate(student.createdAt)}</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    student.isActive 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {student.isActive ? 'Active' : 'Inactive'}
-                  </span>
                 </div>
+
+                {/* Status History */}
+                {showStatusHistory === student.id && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <StatusHistory
+                      entityType="student"
+                      entityId={student.id}
+                      maxEntries={3}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex space-x-2">
