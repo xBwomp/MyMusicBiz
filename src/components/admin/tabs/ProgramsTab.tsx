@@ -12,6 +12,8 @@ const ProgramsTab = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOfferingModalOpen, setIsOfferingModalOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
+  const [editingOffering, setEditingOffering] = useState<Offering | null>(null);
+  const [offeringStep, setOfferingStep] = useState(1);
   const [programForm, setProgramForm] = useState<Omit<Program, 'id' | 'createdAt' | 'updatedAt'>>({
     name: '',
     description: '',
@@ -99,35 +101,50 @@ const ProgramsTab = () => {
     }
   };
 
-  const openOfferingModal = (programId: string) => {
-    setNewOffering({
-      programId,
-      className: '',
-      term: '',
-      registrationFee: 0,
-      materialsFee: 0,
-      instructionalFee: 0,
-      startDate: new Date(),
-      stopDate: new Date(),
-      classDates: [],
-      isRecurring: false,
-      deliveryMethod: 'onsite',
-      instructor: '',
-      location: '',
-      isActive: true,
-    });
-    setClassDatesInput('');
+  const openOfferingModal = (programId: string, offering?: Offering) => {
+    if (offering) {
+      const { id, createdAt, updatedAt, ...rest } = offering;
+      void id; void createdAt; void updatedAt;
+      setNewOffering(rest);
+      setClassDatesInput(offering.classDates.map(d => d.toISOString().split('T')[0]).join(', '));
+      setEditingOffering(offering);
+    } else {
+      setNewOffering({
+        programId,
+        className: '',
+        term: '',
+        registrationFee: 0,
+        materialsFee: 0,
+        instructionalFee: 0,
+        startDate: new Date(),
+        stopDate: new Date(),
+        classDates: [],
+        isRecurring: false,
+        deliveryMethod: 'onsite',
+        instructor: '',
+        location: '',
+        isActive: true,
+      });
+      setClassDatesInput('');
+      setEditingOffering(null);
+    }
+    setOfferingStep(1);
     setIsOfferingModalOpen(true);
   };
 
-  const handleCreateOffering = async (e: React.FormEvent) => {
+  const handleSaveOffering = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await offeringService.createOffering(newOffering);
+      if (editingOffering) {
+        await offeringService.updateOffering(editingOffering.id, newOffering);
+      } else {
+        await offeringService.createOffering(newOffering);
+      }
       setIsOfferingModalOpen(false);
+      setEditingOffering(null);
       await loadData();
     } catch (error) {
-      console.error('Error creating offering:', error);
+      console.error('Error saving offering:', error);
     }
   };
 
@@ -323,7 +340,10 @@ const ProgramsTab = () => {
                               </div>
                             </div>
                             <div className="flex space-x-1">
-                              <button className="p-1 text-gray-400 hover:text-indigo-600 transition-colors duration-200">
+                              <button
+                                onClick={() => openOfferingModal(offering.programId, offering)}
+                                className="p-1 text-gray-400 hover:text-indigo-600 transition-colors duration-200"
+                              >
                                 <Edit className="h-3 w-3" />
                               </button>
                               <button className="p-1 text-gray-400 hover:text-red-600 transition-colors duration-200">
@@ -487,176 +507,203 @@ const ProgramsTab = () => {
       {isOfferingModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold mb-4">Add Class Offering</h3>
-            <form onSubmit={handleCreateOffering} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Class Name</label>
-                <input
-                  type="text"
-                  value={newOffering.className}
-                  onChange={(e) => setNewOffering({ ...newOffering, className: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Term</label>
-                <input
-                  type="text"
-                  value={newOffering.term}
-                  onChange={(e) => setNewOffering({ ...newOffering, term: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Start Date</label>
-                  <input
-                    type="date"
-                    value={newOffering.startDate.toISOString().split('T')[0]}
-                    onChange={(e) => setNewOffering({ ...newOffering, startDate: new Date(e.target.value) })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">End Date</label>
-                  <input
-                    type="date"
-                    value={newOffering.stopDate.toISOString().split('T')[0]}
-                    onChange={(e) => setNewOffering({ ...newOffering, stopDate: new Date(e.target.value) })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Registration Fee</label>
-                  <input
-                    type="number"
-                    value={newOffering.registrationFee}
-                    onChange={(e) => setNewOffering({ ...newOffering, registrationFee: parseFloat(e.target.value) || 0 })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Materials Fee</label>
-                  <input
-                    type="number"
-                    value={newOffering.materialsFee}
-                    onChange={(e) => setNewOffering({ ...newOffering, materialsFee: parseFloat(e.target.value) || 0 })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Instructional Fee</label>
-                  <input
-                    type="number"
-                    value={newOffering.instructionalFee}
-                    onChange={(e) => setNewOffering({ ...newOffering, instructionalFee: parseFloat(e.target.value) || 0 })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Instructor</label>
-                <input
-                  type="text"
-                  value={newOffering.instructor}
-                  onChange={(e) => setNewOffering({ ...newOffering, instructor: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Delivery Method</label>
-                <select
-                  value={newOffering.deliveryMethod}
-                  onChange={(e) => setNewOffering({ ...newOffering, deliveryMethod: e.target.value as 'onsite' | 'virtual' })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                >
-                  <option value="onsite">On Site</option>
-                  <option value="virtual">Virtual</option>
-                </select>
-              </div>
-              {newOffering.deliveryMethod === 'onsite' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Location</label>
-                  <input
-                    type="text"
-                    value={newOffering.location}
-                    onChange={(e) => setNewOffering({ ...newOffering, location: e.target.value })}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                  />
-                </div>
+            <h3 className="text-lg font-semibold mb-4">
+              {editingOffering ? 'Edit Class Offering' : 'Add Class Offering'}
+            </h3>
+            <form onSubmit={handleSaveOffering} className="space-y-4">
+              {offeringStep === 1 && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Class Name</label>
+                    <input
+                      type="text"
+                      value={newOffering.className}
+                      onChange={(e) => setNewOffering({ ...newOffering, className: e.target.value })}
+                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Term</label>
+                    <input
+                      type="text"
+                      value={newOffering.term}
+                      onChange={(e) => setNewOffering({ ...newOffering, term: e.target.value })}
+                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Start Date</label>
+                      <input
+                        type="date"
+                        value={newOffering.startDate.toISOString().split('T')[0]}
+                        onChange={(e) => setNewOffering({ ...newOffering, startDate: new Date(e.target.value) })}
+                        className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">End Date</label>
+                      <input
+                        type="date"
+                        value={newOffering.stopDate.toISOString().split('T')[0]}
+                        onChange={(e) => setNewOffering({ ...newOffering, stopDate: new Date(e.target.value) })}
+                        className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Instructor</label>
+                    <input
+                      type="text"
+                      value={newOffering.instructor}
+                      onChange={(e) => setNewOffering({ ...newOffering, instructor: e.target.value })}
+                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Delivery Method</label>
+                    <select
+                      value={newOffering.deliveryMethod}
+                      onChange={(e) => setNewOffering({ ...newOffering, deliveryMethod: e.target.value as 'onsite' | 'virtual' })}
+                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                    >
+                      <option value="onsite">On Site</option>
+                      <option value="virtual">Virtual</option>
+                    </select>
+                  </div>
+                  {newOffering.deliveryMethod === 'onsite' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Location</label>
+                      <input
+                        type="text"
+                        value={newOffering.location}
+                        onChange={(e) => setNewOffering({ ...newOffering, location: e.target.value })}
+                        className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Class Dates</label>
+                    <input
+                      type="text"
+                      placeholder="YYYY-MM-DD, YYYY-MM-DD"
+                      value={classDatesInput}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setClassDatesInput(value);
+                        const dates = value
+                          .split(',')
+                          .map(d => new Date(d.trim()))
+                          .filter(d => !isNaN(d.getTime()));
+                        setNewOffering({ ...newOffering, classDates: dates });
+                      }}
+                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                    />
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      id="isRecurring"
+                      type="checkbox"
+                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                      checked={newOffering.isRecurring}
+                      onChange={(e) => setNewOffering({ ...newOffering, isRecurring: e.target.checked })}
+                    />
+                    <label htmlFor="isRecurring" className="ml-2 block text-sm text-gray-700">Recurring Class</label>
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsOfferingModalOpen(false)}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOfferingStep(2)}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </>
               )}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Class Dates</label>
-                <input
-                  type="text"
-                  placeholder="YYYY-MM-DD, YYYY-MM-DD"
-                  value={classDatesInput}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setClassDatesInput(value);
-                    const dates = value
-                      .split(',')
-                      .map(d => new Date(d.trim()))
-                      .filter(d => !isNaN(d.getTime()));
-                    setNewOffering({ ...newOffering, classDates: dates });
-                  }}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                />
-              </div>
-              <div className="flex items-center">
-                <input
-                  id="isRecurring"
-                  type="checkbox"
-                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                  checked={newOffering.isRecurring}
-                  onChange={(e) => setNewOffering({ ...newOffering, isRecurring: e.target.checked })}
-                />
-                <label htmlFor="isRecurring" className="ml-2 block text-sm text-gray-700">Recurring Class</label>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Max Students</label>
-                <input
-                  type="number"
-                  value={newOffering.maxStudents ?? ''}
-                  onChange={(e) => setNewOffering({ ...newOffering, maxStudents: e.target.value ? parseInt(e.target.value) : undefined })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                />
-              </div>
-              <div className="flex items-center">
-                <input
-                  id="offeringActive"
-                  type="checkbox"
-                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                  checked={newOffering.isActive}
-                  onChange={(e) => setNewOffering({ ...newOffering, isActive: e.target.checked })}
-                />
-                <label htmlFor="offeringActive" className="ml-2 block text-sm text-gray-700">Active</label>
-              </div>
-              <div className="flex justify-end space-x-2 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsOfferingModalOpen(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                >
-                  Save
-                </button>
-              </div>
+
+              {offeringStep === 2 && (
+                <>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Registration Fee</label>
+                      <input
+                        type="number"
+                        value={newOffering.registrationFee}
+                        onChange={(e) => setNewOffering({ ...newOffering, registrationFee: parseFloat(e.target.value) || 0 })}
+                        className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Materials Fee</label>
+                      <input
+                        type="number"
+                        value={newOffering.materialsFee}
+                        onChange={(e) => setNewOffering({ ...newOffering, materialsFee: parseFloat(e.target.value) || 0 })}
+                        className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Instructional Fee</label>
+                      <input
+                        type="number"
+                        value={newOffering.instructionalFee}
+                        onChange={(e) => setNewOffering({ ...newOffering, instructionalFee: parseFloat(e.target.value) || 0 })}
+                        className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Max Students</label>
+                    <input
+                      type="number"
+                      value={newOffering.maxStudents ?? ''}
+                      onChange={(e) => setNewOffering({ ...newOffering, maxStudents: e.target.value ? parseInt(e.target.value) : undefined })}
+                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                    />
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      id="offeringActive"
+                      type="checkbox"
+                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                      checked={newOffering.isActive}
+                      onChange={(e) => setNewOffering({ ...newOffering, isActive: e.target.checked })}
+                    />
+                    <label htmlFor="offeringActive" className="ml-2 block text-sm text-gray-700">Active</label>
+                  </div>
+                  <div className="flex justify-between space-x-2 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setOfferingStep(1)}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </>
+              )}
             </form>
           </div>
         </div>
