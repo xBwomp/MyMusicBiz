@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Mail, Phone, DollarSign, Award } from 'lucide-react';
 import { Teacher } from '../../../types/admin';
 import { teacherService } from '../../../services/adminService';
+import TeacherModal from '../modals/TeacherModal';
 
 const TeachersTab = () => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
 
   useEffect(() => {
     loadTeachers();
@@ -20,6 +23,17 @@ const TeachersTab = () => {
       console.error('Error loading teachers:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this teacher?')) {
+      try {
+        await teacherService.deleteTeacher(id);
+        await loadTeachers();
+      } catch (error) {
+        console.error('Error deleting teacher:', error);
+      }
     }
   };
 
@@ -64,11 +78,17 @@ const TeachersTab = () => {
           <h2 className="text-2xl font-bold text-gray-900">Teachers</h2>
           <p className="text-gray-600">Manage instructor profiles and information</p>
         </div>
-        <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2">
+        <button
+          onClick={() => {
+            setEditingTeacher(null);
+            setShowModal(true);
+          }}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2"
+        >
           <Plus className="h-4 w-4" />
           <span>Add Teacher</span>
         </button>
-      </div>
+        </div>
 
       {/* Search */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -175,10 +195,19 @@ const TeachersTab = () => {
               </div>
 
               <div className="flex space-x-2">
-                <button className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200">
+                <button
+                  onClick={() => {
+                    setEditingTeacher(teacher);
+                    setShowModal(true);
+                  }}
+                  className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200"
+                >
                   <Edit className="h-4 w-4" />
                 </button>
-                <button className="p-2 text-gray-400 hover:text-red-600 transition-colors duration-200">
+                <button
+                  onClick={() => handleDelete(teacher.id)}
+                  className="p-2 text-gray-400 hover:text-red-600 transition-colors duration-200"
+                >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -199,11 +228,24 @@ const TeachersTab = () => {
               : 'Get started by adding your first teacher.'
             }
           </p>
-          <button className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto">
-            <Plus className="h-5 w-5" />
-            <span>Add First Teacher</span>
-          </button>
-        </div>
+            <button
+              onClick={() => {
+                setEditingTeacher(null);
+                setShowModal(true);
+              }}
+              className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Add First Teacher</span>
+            </button>
+          </div>
+        )}
+      {showModal && (
+        <TeacherModal
+          teacher={editingTeacher || undefined}
+          onClose={() => setShowModal(false)}
+          onSaved={loadTeachers}
+        />
       )}
     </div>
   );
