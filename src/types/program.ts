@@ -18,11 +18,14 @@ export interface Offering {
   instructionalFee: number;
   startDate: Date;
   stopDate: Date;
+  classDates: Date[]; // Individual class meeting dates
+  isRecurring: boolean; // Indicates if the schedule repeats
+  deliveryMethod: 'onsite' | 'virtual';
   maxStudents?: number;
   currentEnrollment?: number;
-  instructor?: string;
-  location?: string;
-  schedule?: string; // e.g., "Mondays 3:00-4:00 PM"
+  instructor: string;
+  location?: string; // Physical location when on site
+  schedule?: string; // Legacy text description of schedule
   ageRange?: string;
   prerequisites?: string;
   description?: string;
