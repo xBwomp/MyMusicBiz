@@ -1,9 +1,10 @@
 import { 
   collection, 
-  doc, 
+  doc,
   getDocs,
   addDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -108,6 +109,10 @@ export const teacherService = {
       ...updates,
       updatedAt: Timestamp.now(),
     });
+  },
+
+  async deleteTeacher(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'teachers', id));
   },
 };
 
