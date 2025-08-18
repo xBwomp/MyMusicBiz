@@ -310,7 +310,7 @@ const StudentViewModal: React.FC<StudentViewModalProps> = ({
                       type="email"
                       value={editForm.email}
                       onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                      required
+                      placeholder="email@email.com"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>

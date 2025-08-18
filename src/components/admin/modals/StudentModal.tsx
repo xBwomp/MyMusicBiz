@@ -135,7 +135,7 @@ const StudentModal: React.FC<StudentModalProps> = ({ student, onClose, onSaved }
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
+              placeholder="email@email.com"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
