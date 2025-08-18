@@ -215,13 +215,16 @@ const ProgramManager = () => {
                     </div>
                   </div>
 
-                  {(offering.schedule || offering.location || offering.instructor) && (
-                    <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-                      {offering.schedule && <div>Schedule: {offering.schedule}</div>}
-                      {offering.location && <div>Location: {offering.location}</div>}
-                      {offering.instructor && <div>Instructor: {offering.instructor}</div>}
+                  <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
+                    {offering.classDates.length > 0 && (
+                      <div>Class Dates: {offering.classDates.map(formatDate).join(', ')}</div>
+                    )}
+                    <div>Recurring: {offering.isRecurring ? 'Yes' : 'No'}</div>
+                    <div>
+                      Delivery: {offering.deliveryMethod === 'virtual' ? 'Virtual' : `On Site${offering.location ? ` - ${offering.location}` : ''}`}
                     </div>
-                  )}
+                    <div>Instructor: {offering.instructor}</div>
+                  </div>
 
                   <div className="mt-4 flex items-center justify-between">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${

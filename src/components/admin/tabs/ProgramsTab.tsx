@@ -27,8 +27,14 @@ const ProgramsTab = () => {
     instructionalFee: 0,
     startDate: new Date(),
     stopDate: new Date(),
+    classDates: [],
+    isRecurring: false,
+    deliveryMethod: 'onsite',
+    instructor: '',
+    location: '',
     isActive: true,
   });
+  const [classDatesInput, setClassDatesInput] = useState('');
 
   useEffect(() => {
     loadData();
@@ -103,8 +109,14 @@ const ProgramsTab = () => {
       instructionalFee: 0,
       startDate: new Date(),
       stopDate: new Date(),
+      classDates: [],
+      isRecurring: false,
+      deliveryMethod: 'onsite',
+      instructor: '',
+      location: '',
       isActive: true,
     });
+    setClassDatesInput('');
     setIsOfferingModalOpen(true);
   };
 
@@ -292,6 +304,22 @@ const ProgramsTab = () => {
                                   <span className="font-medium">Enrolled:</span> {offering.currentEnrollment || 0}
                                   {offering.maxStudents && ` / ${offering.maxStudents}`}
                                 </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mt-2">
+                                <div>
+                                  <span className="font-medium">Instructor:</span> {offering.instructor}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Delivery:</span> {offering.deliveryMethod === 'virtual' ? 'Virtual' : `On Site${offering.location ? ` - ${offering.location}` : ''}`}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Recurring:</span> {offering.isRecurring ? 'Yes' : 'No'}
+                                </div>
+                                {offering.classDates.length > 0 && (
+                                  <div className="md:col-span-2">
+                                    <span className="font-medium">Class Dates:</span> {offering.classDates.map(formatDate).join(', ')}
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <div className="flex space-x-1">
@@ -534,6 +562,66 @@ const ProgramsTab = () => {
                     required
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Instructor</label>
+                <input
+                  type="text"
+                  value={newOffering.instructor}
+                  onChange={(e) => setNewOffering({ ...newOffering, instructor: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Delivery Method</label>
+                <select
+                  value={newOffering.deliveryMethod}
+                  onChange={(e) => setNewOffering({ ...newOffering, deliveryMethod: e.target.value as 'onsite' | 'virtual' })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                >
+                  <option value="onsite">On Site</option>
+                  <option value="virtual">Virtual</option>
+                </select>
+              </div>
+              {newOffering.deliveryMethod === 'onsite' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Location</label>
+                  <input
+                    type="text"
+                    value={newOffering.location}
+                    onChange={(e) => setNewOffering({ ...newOffering, location: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  />
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Class Dates</label>
+                <input
+                  type="text"
+                  placeholder="YYYY-MM-DD, YYYY-MM-DD"
+                  value={classDatesInput}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setClassDatesInput(value);
+                    const dates = value
+                      .split(',')
+                      .map(d => new Date(d.trim()))
+                      .filter(d => !isNaN(d.getTime()));
+                    setNewOffering({ ...newOffering, classDates: dates });
+                  }}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                />
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="isRecurring"
+                  type="checkbox"
+                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                  checked={newOffering.isRecurring}
+                  onChange={(e) => setNewOffering({ ...newOffering, isRecurring: e.target.checked })}
+                />
+                <label htmlFor="isRecurring" className="ml-2 block text-sm text-gray-700">Recurring Class</label>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Max Students</label>
