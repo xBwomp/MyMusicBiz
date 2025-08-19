@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import LoginModal from './auth/LoginModal';
-import UserMenu from './auth/UserMenu';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '#home' },
@@ -15,6 +14,15 @@ const Header = () => {
     { name: 'About', href: '#about' },
     { name: 'Contact', href: '#contact' },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsMenuOpen(false);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <header className="fixed w-full bg-white/95 backdrop-blur-sm shadow-sm z-50">
@@ -52,11 +60,16 @@ const Header = () => {
                 >
                   Admin
                 </a>
-                <UserMenu />
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                >
+                  Logout
+                </button>
               </>
             ) : (
               <>
-                <button 
+                <button
                   onClick={() => setIsLoginModalOpen(true)}
                   className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
                 >
@@ -105,11 +118,16 @@ const Header = () => {
                     >
                       Admin
                     </a>
-                    <UserMenu />
+                    <button
+                      onClick={handleLogout}
+                      className="text-left text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                    >
+                      Logout
+                    </button>
                   </>
                 ) : (
                   <>
-                    <button 
+                    <button
                       onClick={() => setIsLoginModalOpen(true)}
                       className="text-left text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
                     >
