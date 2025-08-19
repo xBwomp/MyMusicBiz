@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, User, DollarSign, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { familyService, studentService, enrollmentService } from '../../../services/adminService';
+import { studentService } from '../../../services/programService';
 import { offeringService } from '../../../services/programService';
 import { Family, Enrollment } from '../../../types/admin';
 import { Student, Offering } from '../../../types/program';

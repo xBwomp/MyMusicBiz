@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, BookOpen, Calendar, DollarSign, Bell, Plus, ArrowRight } from 'lucide-react';
 import { useAdmin } from '../../../hooks/useAdmin';
 import { familyService, studentService } from '../../../services/adminService';
+import { studentService } from '../../../services/programService';
 import { programService, offeringService } from '../../../services/programService';
 import { Family } from '../../../types/admin';
 import { Student, Program, Offering } from '../../../types/program';
