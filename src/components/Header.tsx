@@ -55,6 +55,12 @@ const Header = () => {
             ) : user ? (
               <>
                 <a
+                  href="/portal"
+                  className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                >
+                  Learner
+                </a>
+                <a
                   href="/admin"
                   className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
                 >
@@ -75,7 +81,7 @@ const Header = () => {
                 >
                   Login
                 </button>
-                <button 
+                <button
                   onClick={() => setIsLoginModalOpen(true)}
                   className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
                 >
@@ -112,6 +118,13 @@ const Header = () => {
                 ) : user ? (
                   <>
                     <a
+                      href="/portal"
+                      className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Learner
+                    </a>
+                    <a
                       href="/admin"
                       className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
                       onClick={() => setIsMenuOpen(false)}
@@ -133,7 +146,7 @@ const Header = () => {
                     >
                       Login
                     </button>
-                    <button 
+                    <button
                       onClick={() => setIsLoginModalOpen(true)}
                       className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium text-left"
                     >
