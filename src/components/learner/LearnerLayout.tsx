@@ -1,78 +1,43 @@
 import React, { useState } from 'react';
 import { 
   Users, 
-  GraduationCap, 
-  Calendar, 
-  DollarSign, 
   BookOpen, 
-  UserCheck,
-  Home,
+  Calendar, 
+  CreditCard, 
   Settings,
+  Home,
   Menu,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
-import { useAdmin } from '../../hooks/useAdmin';
+import { useAuth } from '../../hooks/useAuth';
 
-interface AdminLayoutProps {
+interface LearnerLayoutProps {
   children: React.ReactNode;
   activeTab: string;
   onTabChange: (tab: string) => void;
 }
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabChange }) => {
-  const { userProfile, isAdmin, loading } = useAdmin();
+const LearnerLayout: React.FC<LearnerLayoutProps> = ({ children, activeTab, onTabChange }) => {
+  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="mb-4">
-            <UserCheck className="h-16 w-16 text-gray-400 mx-auto" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Restricted</h2>
-          <p className="text-gray-600 mb-6">
-            You need administrator privileges to access this area. Please contact your system administrator.
-          </p>
-          {userProfile && (
-            <div className="mb-4 p-3 bg-gray-100 rounded-lg text-sm">
-              <p><strong>Current Role:</strong> {userProfile.role}</p>
-              <p><strong>Email:</strong> {userProfile.email}</p>
-              <p className="mt-2 text-xs text-gray-500">
-                To become an admin, update your role in the Firestore console or ask an existing admin to promote you.
-              </p>
-            </div>
-          )}
-          <button
-            onClick={() => window.location.href = '/'}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
-          >
-            Return to Home
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const navigation = [
-    { id: 'overview', name: 'Overview', icon: Home },
-    { id: 'programs', name: 'Programs & Classes', icon: BookOpen },
-    { id: 'schedules', name: 'Schedules', icon: Calendar },
-    { id: 'students', name: 'Students', icon: Users },
-    { id: 'families', name: 'Families', icon: Users },
-    { id: 'teachers', name: 'Teachers', icon: GraduationCap },
-    { id: 'enrollments', name: 'Enrollments', icon: UserCheck },
-    { id: 'finances', name: 'Finances', icon: DollarSign },
+    { id: 'dashboard', name: 'Dashboard', icon: Home },
+    { id: 'programs', name: 'Browse Programs', icon: BookOpen },
+    { id: 'enrollments', name: 'My Enrollments', icon: Calendar },
+    { id: 'family', name: 'Family Profile', icon: Users },
+    { id: 'payments', name: 'Payments', icon: CreditCard },
     { id: 'settings', name: 'Settings', icon: Settings },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 lg:flex">
@@ -95,7 +60,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
               alt="Hunicker Institute"
               className="h-8 w-8 object-contain"
             />
-            <span className="text-lg font-semibold text-gray-900">Admin Panel</span>
+            <span className="text-lg font-semibold text-gray-900">Family Portal</span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -128,21 +93,28 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 mb-3">
             <img
-              src={userProfile?.photoURL || 'https://via.placeholder.com/32'}
-              alt={userProfile?.displayName || 'Admin'}
+              src={user?.photoURL || 'https://via.placeholder.com/32'}
+              alt={user?.displayName || 'User'}
               className="h-8 w-8 rounded-full object-cover"
             />
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium text-gray-900 truncate">
-                {userProfile?.displayName}
+                {user?.displayName}
               </div>
-              <div className="text-xs text-gray-500 capitalize">
-                {userProfile?.role}
+              <div className="text-xs text-gray-500">
+                Parent Portal
               </div>
             </div>
           </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+          >
+            <LogOut className="mr-3 h-4 w-4" />
+            Sign Out
+          </button>
         </div>
       </div>
 
@@ -158,11 +130,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
               <Menu className="h-6 w-6" />
             </button>
             <h1 className="text-xl font-semibold text-gray-900 capitalize">
-              {navigation.find(item => item.id === activeTab)?.name || 'Admin Panel'}
+              {navigation.find(item => item.id === activeTab)?.name || 'Family Portal'}
             </h1>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">
-                Welcome back, {userProfile?.displayName?.split(' ')[0]}
+                Welcome back, {user?.displayName?.split(' ')[0]}
               </span>
             </div>
           </div>
@@ -177,4 +149,4 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, activeTab, onTabCha
   );
 };
 
-export default AdminLayout;
+export default LearnerLayout;

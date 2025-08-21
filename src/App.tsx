@@ -8,6 +8,7 @@ import About from './components/About';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import AdminDashboard from './components/admin/AdminDashboard';
+import LearnerPortal from './components/learner/LearnerPortal';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <div className="min-h-screen bg-white">
         <Routes>
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/portal" element={<LearnerPortal />} />
           <Route path="/" element={
             <>
               <Header />

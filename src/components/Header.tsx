@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import LoginModal from './auth/LoginModal';
-import UserMenu from './auth/UserMenu';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
 
   const navigation = [
     { name: 'Home', href: '#home' },
@@ -16,13 +15,22 @@ const Header = () => {
     { name: 'Contact', href: '#contact' },
   ];
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsMenuOpen(false);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <header className="fixed w-full bg-white/95 backdrop-blur-sm shadow-sm z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-2">
-            <img 
-              src="https://scontent-atl3-1.xx.fbcdn.net/v/t39.30808-6/446998267_390822577278912_1249827645745068948_n.png?_nc_cat=106&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=y-u-Mz78OY4Q7kNvwHueQVa&_nc_oc=Adm6ExywDwIP8-gKSfykLIL42D5xY5uVvehSe4QT41D9UWN-XfZ1_Qnolpj_87Zd3dQ&_nc_zt=23&_nc_ht=scontent-atl3-1.xx&_nc_gid=zz9Di8SNbHNxiofU_GGUiQ&oh=00_AfXZYd-shHv1jZIgu3EIoWL9TcCarVEPc6-f-C6gvGoKzA&oe=689D9B83"
+            <img
+              src="/hunicker-logo.svg"
               alt="Hunicker Institute Logo"
               className="h-8 w-8 object-contain"
             />
@@ -52,11 +60,16 @@ const Header = () => {
                 >
                   Admin
                 </a>
-                <UserMenu />
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                >
+                  Logout
+                </button>
               </>
             ) : (
               <>
-                <button 
+                <button
                   onClick={() => setIsLoginModalOpen(true)}
                   className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
                 >
@@ -105,11 +118,16 @@ const Header = () => {
                     >
                       Admin
                     </a>
-                    <UserMenu />
+                    <button
+                      onClick={handleLogout}
+                      className="text-left text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                    >
+                      Logout
+                    </button>
                   </>
                 ) : (
                   <>
-                    <button 
+                    <button
                       onClick={() => setIsLoginModalOpen(true)}
                       className="text-left text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
                     >

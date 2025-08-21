@@ -13,19 +13,10 @@ const Programs = () => {
   }, []);
 
   const loadPrograms = async () => {
-    try {
-      const [programsData, offeringsData] = await Promise.all([
-        programService.getActivePrograms(),
-        offeringService.getActiveOfferings()
-      ]);
-      setPrograms(programsData);
-      setOfferings(offeringsData);
-    } catch (error) {
-      console.error('Error loading programs:', error);
-      // Fallback to static data if Firebase isn't configured
-      setPrograms([]);
-      setOfferings([]);
-    }
+    // Temporarily disabled Firebase queries until indexes are deployed
+    // This prevents the composite index error while maintaining functionality
+    setPrograms([]);
+    setOfferings([]);
   };
 
   const staticPrograms = [
