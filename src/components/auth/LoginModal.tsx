@@ -22,7 +22,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style={{ alignItems: 'flex-start', paddingTop: '30vh' }}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 p-4">
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl max-w-md max-h-[90vh] overflow-y-auto w-full p-8 relative">
         <button
           onClick={onClose}
