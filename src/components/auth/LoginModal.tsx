@@ -26,7 +26,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl max-w-md max-h-[90vh] overflow-y-auto w-full p-8 relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200 z-10"
         >
           <X className="h-6 w-6" />
         </button>
