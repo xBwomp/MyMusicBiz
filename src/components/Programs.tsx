@@ -1,8 +1,9 @@
-import React from 'react';
+//import React from 'react';
 import { useState, useEffect } from 'react';
-import { Piano, Users, GraduationCap, Star } from 'lucide-react';
+import { Piano, Users, GraduationCap, Star, Music } from 'lucide-react';
 import { Program, Offering } from '../types/program';
-import { programService, offeringService } from '../services/programService';
+import { FileMusic } from 'lucide-react';
+//import { programService, offeringService } from '../services/programService';
 
 const Programs = () => {
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -22,10 +23,11 @@ const Programs = () => {
   const staticPrograms = [
     {
       icon: Piano,
+
       title: 'Private Lessons',
       description: 'One-on-one instruction tailored to your individual goals and learning pace.',
-      features: ['Piano', 'Guitar', 'Voice', 'Violin', 'Flute'],
-      price: 'Starting at $60/lesson',
+      features: ['Piano', 'Guitar', 'Saxophone', 'Trumpet', 'Drums'],
+      price: 'Starting at $30/lesson',
       popular: false,
     },
     {
@@ -33,16 +35,16 @@ const Programs = () => {
       title: 'Homeschool Music',
       description: 'Comprehensive music education integrated with your homeschool curriculum.',
       features: ['Music Theory', 'History', 'Composition', 'Performance', 'Ear Training'],
-      price: 'Starting at $80/month',
-      popular: true,
+      price: 'Contact for pricing',
+      popular: false,
     },
     {
-      icon: Users,
+      icon: Music,
       title: 'Band Program',
       description: 'Collaborative ensemble experience for intermediate and advanced students.',
-      features: ['Concert Band', 'Jazz Ensemble', 'Chamber Groups', 'Performances', 'Competitions'],
-      price: 'Starting at $120/month',
-      popular: false,
+      features: ['Group Practice', 'Performances'],
+      price: 'Starting at $100/month',
+      popular: true,
     },
   ];
 

@@ -34,12 +34,12 @@ const Hero = () => {
                 <div className="text-sm text-gray-600">Students Taught</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-indigo-600">10+</div>
-                <div className="text-sm text-gray-600">Years Experience</div>
+                <div className="text-2xl font-bold text-indigo-600">20+</div>
+                <div className="text-sm text-gray-600">Years of Teaching Experience</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-indigo-600">5</div>
-                <div className="text-sm text-gray-600">Instruments</div>
+                <div className="text-2xl font-bold text-indigo-600">Group | Private</div>
+                <div className="text-sm text-gray-600">Lessons</div>
               </div>
             </div>
           </div>
@@ -56,8 +56,8 @@ const Hero = () => {
                 <div className="flex items-center space-x-3">
                   <Calendar className="h-8 w-8 text-indigo-600" />
                   <div>
-                    <div className="font-semibold text-gray-900">Next Lesson</div>
-                    <div className="text-sm text-gray-600">Piano - 3:00 PM</div>
+                    <div className="font-semibold text-gray-900">What's Your Next Lesson?</div>
+                    <div className="text-sm text-gray-600">Piano - Friday - 3:00 PM</div>
                   </div>
                 </div>
               </div>
@@ -67,7 +67,7 @@ const Hero = () => {
                   <Users className="h-8 w-8 text-indigo-600" />
                   <div>
                     <div className="font-semibold text-gray-900">Band Practice</div>
-                    <div className="text-sm text-gray-600">12 Students</div>
+                    <div className="text-sm text-gray-600">15+ Students and Growing</div>
                   </div>
                 </div>
               </div>
