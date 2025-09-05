@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useAdmin } from '../hooks/useAdmin';
 import LoginModal from './auth/LoginModal';
+import UserMenu from './auth/UserMenu';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { user, loading, logout } = useAuth();
+  const { userProfile } = useAdmin();
 
   const navigation = [
     { name: 'Home', href: '#home' },
@@ -29,12 +32,14 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <div className="flex items-center space-x-2">
+            <a href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity duration-200">
             <img
               src="/hunicker-logo.svg"
               alt="Hunicker Institute Logo"
               className="h-8 w-8 object-contain"
             />
             <span className="text-xl font-bold text-gray-900">Hunicker Institute: Band and Beyond</span>
+            </a>
           </div>
           
           <nav className="hidden md:flex space-x-8">
@@ -53,20 +58,7 @@ const Header = () => {
             {loading ? (
               <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
             ) : user ? (
-              <>
-                <a
-                  href="/admin"
-                  className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
-                >
-                  Admin
-                </a>
-                <button
-                  onClick={handleLogout}
-                  className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
-                >
-                  Logout
-                </button>
-              </>
+              <UserMenu />
             ) : (
               <>
                 <button
@@ -112,12 +104,21 @@ const Header = () => {
                 ) : user ? (
                   <>
                     <a
-                      href="/admin"
+                      href="/"
                       className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      Admin
+                      Home
                     </a>
+                    {userProfile?.role === 'admin' && (
+                      <a
+                        href="/admin"
+                        className="text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Admin Panel
+                      </a>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="text-left text-gray-700 hover:text-indigo-600 transition-colors duration-200 font-medium"

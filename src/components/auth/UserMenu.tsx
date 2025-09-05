@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { LogOut, Settings, BookOpen, Calendar } from 'lucide-react';
+import { LogOut, Settings, BookOpen, Calendar, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useAdmin } from '../../hooks/useAdmin';
 
 const UserMenu = () => {
   const { user, logout } = useAuth();
+  const { userProfile } = useAdmin();
   const [isOpen, setIsOpen] = useState(false);
 
   if (!user) return null;
@@ -31,6 +33,11 @@ const UserMenu = () => {
         <span className="hidden md:block text-sm font-medium text-gray-700">
           {user.displayName?.split(' ')[0] || 'User'}
         </span>
+        {userProfile?.role && (
+          <span className="hidden md:block text-xs text-gray-500">
+            ({userProfile.role})
+          </span>
+        )}
       </button>
 
       {isOpen && (
@@ -56,6 +63,10 @@ const UserMenu = () => {
 
             <div className="py-2">
               <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-3">
+                <User className="h-4 w-4" />
+                <span>See Profile</span>
+              </button>
+              <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-3">
                 <BookOpen className="h-4 w-4" />
                 <span>My Lessons</span>
               </button>
@@ -67,6 +78,18 @@ const UserMenu = () => {
                 <Settings className="h-4 w-4" />
                 <span>Settings</span>
               </button>
+              {userProfile?.role === 'admin' && (
+                <button 
+                  onClick={() => {
+                    window.location.href = '/admin';
+                    setIsOpen(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-3"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Admin Panel</span>
+                </button>
+              )}
             </div>
 
             <div className="border-t border-gray-100 py-2">
