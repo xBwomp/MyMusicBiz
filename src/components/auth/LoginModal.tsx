@@ -1,6 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useAdmin } from '../../hooks/useAdmin';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -9,10 +10,20 @@ interface LoginModalProps {
 
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const { signInWithGoogle } = useAuth();
+  const { isAdmin } = useAdmin();
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
+      const user = await signInWithGoogle();
+      
+      // Small delay to allow user profile to load
+      setTimeout(() => {
+        // Check if user is admin and redirect accordingly
+        if (isAdmin) {
+          window.location.href = '/admin?tab=overview';
+        }
+      }, 1000);
+      
       onClose();
     } catch (error) {
       console.error('Login failed:', error);
