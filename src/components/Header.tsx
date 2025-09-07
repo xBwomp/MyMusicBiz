@@ -67,11 +67,12 @@ const Header = () => {
                 >
                   Login
                 </button>
-                <button 
+                <button
                   onClick={() => setIsLoginModalOpen(true)}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
+                  className="relative bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white px-4 py-2 rounded-lg font-medium overflow-hidden group animate-rainbow-border"
                 >
-                  Get Started
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 via-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-rainbow-bg"></div>
+                  <span className="relative z-10">Get Started</span>
                 </button>
               </>
             )}
