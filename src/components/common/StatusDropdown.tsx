@@ -10,6 +10,8 @@ import {
 import { statusService } from '../../services/statusService';
 import { useAdmin } from '../../hooks/useAdmin';
 
+type Role = 'admin' | 'teacher' | 'student' | 'parent';
+
 interface StatusDropdownProps {
   entityType: 'student' | 'family';
   entityId: string;
@@ -17,6 +19,8 @@ interface StatusDropdownProps {
   onStatusChange?: (newStatus: string, reason?: string) => void;
   disabled?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  userRole?: Role;
+  changedById?: string;
 }
 
 const StatusDropdown: React.FC<StatusDropdownProps> = ({
@@ -25,9 +29,12 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
   currentStatus,
   onStatusChange,
   disabled = false,
-  size = 'md'
+  size = 'md',
+  userRole,
+  changedById
 }) => {
   const { userProfile } = useAdmin();
+  const role: Role = userRole || userProfile?.role || 'parent';
   const [isOpen, setIsOpen] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
   const [showReasonModal, setShowReasonModal] = useState(false);
@@ -35,10 +42,7 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
   const [reason, setReason] = useState('');
 
   // Get user permissions for this entity type
-  const permissions = statusService.getStatusPermissions(
-    userProfile?.role || 'parent', 
-    entityType
-  );
+  const permissions = statusService.getStatusPermissions(role, entityType);
 
   // Get status configuration
   const statusConfig = entityType === 'student' ? STUDENT_STATUS_CONFIG : FAMILY_STATUS_CONFIG;
@@ -79,7 +83,8 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
   };
 
   const changeStatus = async (newStatus: string, statusReason: string) => {
-    if (!userProfile) return;
+    const actorId = changedById || userProfile?.id;
+    if (!actorId) return;
 
     setIsChanging(true);
     try {
@@ -88,7 +93,7 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
           entityId,
           newStatus as StudentStatus,
           statusReason,
-          userProfile.id,
+          actorId,
           currentStatus as StudentStatus
         );
       } else {
@@ -96,7 +101,7 @@ const StatusDropdown: React.FC<StatusDropdownProps> = ({
           entityId,
           newStatus as FamilyStatus,
           statusReason,
-          userProfile.id,
+          actorId,
           currentStatus as FamilyStatus
         );
       }

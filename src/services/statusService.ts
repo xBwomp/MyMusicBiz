@@ -7,7 +7,8 @@ import {
   query,
   where,
   orderBy,
-  Timestamp 
+  Timestamp,
+  limit
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { 
@@ -125,14 +126,15 @@ export class StatusService {
   async getStatusHistory(
     entityType: 'student' | 'family',
     entityId: string,
-    limit: number = 10
+    max: number = 10
   ): Promise<StatusHistoryEntry[]> {
     try {
       const historyQuery = query(
         collection(db, 'statusHistory'),
         where('entityType', '==', entityType),
         where('entityId', '==', entityId),
-        orderBy('changedAt', 'desc')
+        orderBy('changedAt', 'desc'),
+        limit(max)
       );
 
       const querySnapshot = await getDocs(historyQuery);

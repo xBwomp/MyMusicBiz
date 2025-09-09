@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Filter, Calendar, DollarSign, Users, Clock, MapPin } from 'lucide-react';
 import { Program, Offering } from '../../../types/program';
 import { programService, offeringService } from '../../../services/programService';
@@ -30,15 +30,26 @@ const ProgramBrowser = () => {
     }
   };
 
-  const filteredPrograms = programs.filter(program => {
-    const matchesSearch = program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         program.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || program.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const offeringsByProgram = useMemo(() => {
+    const map: Record<string, Offering[]> = {};
+    for (const o of offerings) {
+      (map[o.programId] ||= []).push(o);
+    }
+    return map;
+  }, [offerings]);
+
+  const filteredPrograms = useMemo(() => {
+    const s = searchTerm.toLowerCase();
+    return programs.filter(program => {
+      const matchesSearch = program.name.toLowerCase().includes(s) ||
+                           program.description.toLowerCase().includes(s);
+      const matchesCategory = categoryFilter === 'all' || program.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [programs, searchTerm, categoryFilter]);
 
   const getProgramOfferings = (programId: string) => {
-    return offerings.filter(o => o.programId === programId);
+    return offeringsByProgram[programId] || [];
   };
 
   const formatCurrency = (amount: number) => {

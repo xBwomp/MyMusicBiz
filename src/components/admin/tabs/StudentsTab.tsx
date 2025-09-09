@@ -6,8 +6,10 @@ import { studentService } from '../../../services/programService';
 import StudentModal from '../modals/StudentModal';
 import StatusDropdown from '../../common/StatusDropdown';
 import StatusHistory from '../../common/StatusHistory';
+import { useAdmin } from '../../../hooks/useAdmin';
 
 const StudentsTab = () => {
+  const { userProfile } = useAdmin();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -144,6 +146,8 @@ const StudentsTab = () => {
                         currentStatus={(student.status as StudentStatus) || 'active'}
                         onStatusChange={(newStatus) => handleStatusChange(student.id, newStatus)}
                         size="sm"
+                        userRole={userProfile?.role}
+                        changedById={userProfile?.id}
                       />
                       <button
                         onClick={() => setShowStatusHistory(

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Edit, Trash2, Calendar, DollarSign, Users, Search } from 'lucide-react';
 import { Program, Offering } from '../../../types/program';
 import { programService, offeringService } from '../../../services/programService';
@@ -57,12 +57,23 @@ const ProgramsTab = () => {
     }
   };
 
-  const filteredPrograms = programs.filter(program => {
-    const matchesSearch = program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         program.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || program.category === filterCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const offeringsByProgram = useMemo(() => {
+    const map: Record<string, Offering[]> = {};
+    for (const o of offerings) {
+      (map[o.programId] ||= []).push(o);
+    }
+    return map;
+  }, [offerings]);
+
+  const filteredPrograms = useMemo(() => {
+    const s = searchTerm.toLowerCase();
+    return programs.filter(program => {
+      const matchesSearch = program.name.toLowerCase().includes(s) ||
+                           program.description.toLowerCase().includes(s);
+      const matchesCategory = filterCategory === 'all' || program.category === filterCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [programs, searchTerm, filterCategory]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -215,7 +226,7 @@ const ProgramsTab = () => {
       {/* Programs Grid */}
       <div className="grid gap-6">
         {filteredPrograms.map((program) => {
-          const programOfferings = offerings.filter(o => o.programId === program.id);
+          const programOfferings = offeringsByProgram[program.id] || [];
           const activeOfferings = programOfferings.filter(o => o.isActive);
           
           return (
