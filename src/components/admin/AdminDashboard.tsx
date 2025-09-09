@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import OverviewTab from './tabs/OverviewTab';
-import ProgramsTab from './tabs/ProgramsTab';
 import StudentsTab from './tabs/StudentsTab';
 import FamiliesTab from './tabs/FamiliesTab';
 import TeachersTab from './tabs/TeachersTab';
@@ -10,6 +9,7 @@ import EnrollmentsTab from './tabs/EnrollmentsTab';
 import FinancesTab from './tabs/FinancesTab';
 import SettingsTab from './tabs/SettingsTab';
 import SchedulesTab from './tabs/SchedulesTab';
+import ProgramsTab from './tabs/ProgramsTab';
 
 const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
