@@ -83,10 +83,12 @@ export const offeringService = {
       ...doc.data(),
       startDate: doc.data().startDate?.toDate(),
       stopDate: doc.data().stopDate?.toDate(),
-      classDates: doc.data().classDates?.map((d: Timestamp) => d.toDate()) || [],
-      isRecurring: doc.data().isRecurring ?? false,
+      daysOfWeek: doc.data().daysOfWeek || [],
       deliveryMethod: doc.data().deliveryMethod ?? 'onsite',
-      instructor: doc.data().instructor ?? '',
+      teacherId: doc.data().teacherId ?? '',
+      startTime: doc.data().startTime ?? '09:00',
+      endTime: doc.data().endTime ?? '10:00',
+      maxStudents: doc.data().maxStudents ?? 10,
       createdAt: doc.data().createdAt?.toDate(),
       updatedAt: doc.data().updatedAt?.toDate(),
     })) as Offering[];
@@ -106,10 +108,12 @@ export const offeringService = {
       ...doc.data(),
       startDate: doc.data().startDate?.toDate(),
       stopDate: doc.data().stopDate?.toDate(),
-      classDates: doc.data().classDates?.map((d: Timestamp) => d.toDate()) || [],
-      isRecurring: doc.data().isRecurring ?? false,
+      daysOfWeek: doc.data().daysOfWeek || [],
       deliveryMethod: doc.data().deliveryMethod ?? 'onsite',
-      instructor: doc.data().instructor ?? '',
+      teacherId: doc.data().teacherId ?? '',
+      startTime: doc.data().startTime ?? '09:00',
+      endTime: doc.data().endTime ?? '10:00',
+      maxStudents: doc.data().maxStudents ?? 10,
       createdAt: doc.data().createdAt?.toDate(),
       updatedAt: doc.data().updatedAt?.toDate(),
     })) as Offering[];
@@ -129,10 +133,12 @@ export const offeringService = {
       ...doc.data(),
       startDate: doc.data().startDate?.toDate(),
       stopDate: doc.data().stopDate?.toDate(),
-      classDates: doc.data().classDates?.map((d: Timestamp) => d.toDate()) || [],
-      isRecurring: doc.data().isRecurring ?? false,
+      daysOfWeek: doc.data().daysOfWeek || [],
       deliveryMethod: doc.data().deliveryMethod ?? 'onsite',
-      instructor: doc.data().instructor ?? '',
+      teacherId: doc.data().teacherId ?? '',
+      startTime: doc.data().startTime ?? '09:00',
+      endTime: doc.data().endTime ?? '10:00',
+      maxStudents: doc.data().maxStudents ?? 10,
       createdAt: doc.data().createdAt?.toDate(),
       updatedAt: doc.data().updatedAt?.toDate(),
     })) as Offering[];
@@ -145,7 +151,6 @@ export const offeringService = {
       ...offering,
       startDate: Timestamp.fromDate(offering.startDate),
       stopDate: Timestamp.fromDate(offering.stopDate),
-      classDates: offering.classDates.map(date => Timestamp.fromDate(date)),
       createdAt: now,
       updatedAt: now,
     });
@@ -165,9 +170,6 @@ export const offeringService = {
     }
     if (updates.stopDate) {
       updateData.stopDate = Timestamp.fromDate(updates.stopDate);
-    }
-    if (updates.classDates) {
-      updateData.classDates = updates.classDates.map(date => Timestamp.fromDate(date));
     }
 
     await updateDoc(docRef, updateData);

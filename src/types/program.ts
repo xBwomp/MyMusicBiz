@@ -13,19 +13,19 @@ export interface Offering {
   programId: string; // Reference to Program
   className: string;
   term: string; // e.g., "Fall 2024", "Spring 2025"
+  teacherId: string; // Reference to Teacher
   registrationFee: number;
   materialsFee: number;
   instructionalFee: number;
   startDate: Date;
   stopDate: Date;
-  classDates: Date[]; // Individual class meeting dates
-  isRecurring: boolean; // Indicates if the schedule repeats
+  daysOfWeek: number[]; // Array of day numbers (0=Sunday, 1=Monday, etc.)
+  startTime: string; // "14:30" format
+  endTime: string; // "15:30" format
   deliveryMethod: 'onsite' | 'virtual';
-  maxStudents?: number;
+  maxStudents: number;
   currentEnrollment?: number;
-  instructor: string;
   location?: string; // Physical location when on site
-  schedule?: string; // Legacy text description of schedule
   ageRange?: string;
   prerequisites?: string;
   description?: string;

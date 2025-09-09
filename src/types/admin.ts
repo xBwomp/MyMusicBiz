@@ -48,28 +48,10 @@ export interface Family {
   updatedAt: Date;
 }
 
-export interface Schedule {
-  id: string;
-  offeringId: string;
-  teacherId: string;
-  dayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
-  startTime: string; // "14:30" format
-  endTime: string; // "15:30" format
-  location: string;
-  maxStudents?: number;
-  recurringWeeks: number; // How many weeks this schedule repeats
-  startDate: Date;
-  endDate: Date;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface Enrollment {
   id: string;
   studentId: string;
   offeringId: string;
-  scheduleId?: string;
   enrollmentDate: Date;
   status: 'enrolled' | 'waitlist' | 'completed' | 'dropped';
   paymentStatus: 'pending' | 'partial' | 'paid' | 'overdue';
