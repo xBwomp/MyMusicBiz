@@ -1,38 +1,24 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Edit, Trash2, Search, Calendar, Clock, MapPin, User, Users, ChevronDown, ChevronUp, View } from 'lucide-react';
-import { Schedule } from '../../../types/admin';
+import { Search, Calendar, Clock, MapPin, User, Users, ChevronDown, ChevronUp, View } from 'lucide-react';
 import { Teacher } from '../../../types/admin';
-import { Offering } from '../../../types/program';
-import { Student } from '../../../types/program';
-import { scheduleService } from '../../../services/adminService';
+import { Offering, Student } from '../../../types/program';
 import { teacherService } from '../../../services/adminService';
 import { offeringService, studentService } from '../../../services/programService';
-import ScheduleModal from '../modals/ScheduleModal';
 import StudentScheduleModal from '../modals/StudentScheduleModal';
 import ScheduleCalendar from '../ScheduleCalendar';
-import { EventInput, EventClickArg } from '@fullcalendar/core';
-
-const getTeacher = (teachers: Teacher[], teacherId: string) => {
-  return teachers.find(t => t.id === teacherId);
-};
-
-const getOffering = (offerings: Offering[], offeringId: string) => {
-  return offerings.find(o => o.id === offeringId);
-};
+import { generateCalendarEvents } from '../../../utils/calendarUtils';
+import { EventClickArg } from '@fullcalendar/core';
 
 const SchedulesTab = () => {
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [offerings, setOfferings] = useState<Offering[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
-  const [showModal, setShowModal] = useState(false);
-  const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const [showStudentModal, setShowStudentModal] = useState(false);
-  const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
-  const [expandedSchedules, setExpandedSchedules] = useState<Set<string>>(new Set());
+  const [selectedOfferingId, setSelectedOfferingId] = useState<string | null>(null);
+  const [expandedOfferings, setExpandedOfferings] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadData();
@@ -40,15 +26,13 @@ const SchedulesTab = () => {
 
   const loadData = async () => {
     try {
-      const [schedulesData, teachersData, offeringsData, studentsData] = await Promise.all([
-        scheduleService.getSchedules(),
-        teacherService.getTeachers(),
+      const [offeringsData, teachersData, studentsData] = await Promise.all([
         offeringService.getOfferings(),
+        teacherService.getTeachers(),
         studentService.getStudents()
       ]);
-      setSchedules(schedulesData);
-      setTeachers(teachersData);
       setOfferings(offeringsData);
+      setTeachers(teachersData);
       setStudents(studentsData);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -57,85 +41,56 @@ const SchedulesTab = () => {
     }
   };
 
-  const filteredSchedules = schedules.filter(schedule => {
+  const filteredOfferings = offerings.filter(offering => {
     const searchLower = searchTerm.toLowerCase();
-    const teacher = getTeacher(teachers, schedule.teacherId);
-    const offering = getOffering(offerings, schedule.offeringId);
+    const teacher = getTeacher(offering.teacherId);
     
     return (
-      schedule.location.toLowerCase().includes(searchLower) ||
+      offering.className.toLowerCase().includes(searchLower) ||
+      (offering.location && offering.location.toLowerCase().includes(searchLower)) ||
       (teacher && `${teacher.firstName} ${teacher.lastName}`.toLowerCase().includes(searchLower)) ||
-      (offering && offering.className.toLowerCase().includes(searchLower))
+      offering.term.toLowerCase().includes(searchLower)
     );
   });
 
-  const getEnrolledStudents = (scheduleId: string) => {
-    // In a real implementation, you'd have a junction table for schedule-student relationships
-    // For now, we'll simulate this based on offering enrollments
-    const schedule = schedules.find(s => s.id === scheduleId);
-    if (!schedule) return [];
-    
+  const getTeacher = (teacherId: string) => {
+    return teachers.find(t => t.id === teacherId);
+  };
+
+  const getEnrolledStudents = (offeringId: string) => {
     return students.filter(student => 
-      student.enrolledOfferings.includes(schedule.offeringId)
+      student.enrolledOfferings.includes(offeringId)
     );
   };
 
-  const toggleScheduleExpansion = (scheduleId: string) => {
-    const newExpanded = new Set(expandedSchedules);
-    if (newExpanded.has(scheduleId)) {
-      newExpanded.delete(scheduleId);
+  const toggleOfferingExpansion = (offeringId: string) => {
+    const newExpanded = new Set(expandedOfferings);
+    if (newExpanded.has(offeringId)) {
+      newExpanded.delete(offeringId);
     } else {
-      newExpanded.add(scheduleId);
+      newExpanded.add(offeringId);
     }
-    setExpandedSchedules(newExpanded);
+    setExpandedOfferings(newExpanded);
   };
 
-  const calendarEvents = useMemo((): EventInput[] => {
-    const events: EventInput[] = [];
-    offerings.forEach(offering => {
-      const schedule = schedules.find(s => s.offeringId === offering.id);
-      if (schedule && offering.classDates) {
-        const teacher = getTeacher(teachers, schedule.teacherId);
-        const title = offering.className;
-        
-        offering.classDates.forEach(classDate => {
-          const [startHours, startMinutes] = schedule.startTime.split(':').map(Number);
-          const [endHours, endMinutes] = schedule.endTime.split(':').map(Number);
-
-          const start = new Date(classDate);
-          start.setHours(startHours, startMinutes);
-
-          const end = new Date(classDate);
-          end.setHours(endHours, endMinutes);
-
-          events.push({
-            id: schedule.id, // Keep schedule id for event click handling
-            title,
-            start,
-            end,
-            extendedProps: {
-              schedule,
-              offering,
-              teacher,
-            }
-          });
-        });
+  const calendarEvents = useMemo(() => {
+    const events = [];
+    for (const offering of offerings) {
+      if (offering.isActive) {
+        events.push(...generateCalendarEvents(offering));
       }
-    });
+    }
     return events;
-  }, [schedules, offerings, teachers]);
+  }, [offerings]);
 
   const handleEventClick = (clickInfo: EventClickArg) => {
-    const scheduleId = clickInfo.event.id;
-    const schedule = schedules.find(s => s.id === scheduleId);
-    if (schedule) {
-      setEditingSchedule(schedule);
-      setShowModal(true);
-    }
+    const offeringId = clickInfo.event.extendedProps.offering.id;
+    setSelectedOfferingId(offeringId);
+    setShowStudentModal(true);
   };
 
-  const handleManageStudents = (scheduleId: string) => {
-    setSelectedScheduleId(scheduleId);
+  const handleManageStudents = (offeringId: string) => {
+    setSelectedOfferingId(offeringId);
     setShowStudentModal(true);
   };
 
@@ -155,9 +110,19 @@ const SchedulesTab = () => {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  const getDayName = (dayOfWeek: number) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayOfWeek];
+  const formatDaysOfWeek = (daysOfWeek: number[]) => {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return daysOfWeek
+      .sort((a, b) => a - b)
+      .map(day => dayNames[day])
+      .join(', ');
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
   };
 
   if (loading) {
@@ -173,8 +138,8 @@ const SchedulesTab = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Schedules</h2>
-          <p className="text-gray-600">Manage class schedules and student assignments</p>
+          <h2 className="text-2xl font-bold text-gray-900">Class Schedules</h2>
+          <p className="text-gray-600">View and manage class schedules and student enrollments</p>
         </div>
         <div className="flex items-center gap-4">
           <button
@@ -183,16 +148,6 @@ const SchedulesTab = () => {
           >
             <View className="h-4 w-4" />
             <span>{viewMode === 'list' ? 'Calendar View' : 'List View'}</span>
-          </button>
-          <button
-            onClick={() => {
-              setEditingSchedule(null);
-              setShowModal(true);
-            }}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Create Schedule</span>
           </button>
         </div>
       </div>
@@ -203,7 +158,7 @@ const SchedulesTab = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search schedules by location, teacher, or class name..."
+            placeholder="Search classes by name, location, teacher, or term..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -215,14 +170,15 @@ const SchedulesTab = () => {
         <ScheduleCalendar events={calendarEvents} onEventClick={handleEventClick} />
       ) : (
         <div className="grid gap-6">
-          {filteredSchedules.map((schedule) => {
-            const teacher = getTeacher(teachers, schedule.teacherId);
-            const offering = getOffering(offerings, schedule.offeringId);
-            const enrolledStudents = getEnrolledStudents(schedule.id);
-            const isExpanded = expandedSchedules.has(schedule.id);
+          {filteredOfferings.map((offering) => {
+            const teacher = getTeacher(offering.teacherId);
+            const enrolledStudents = getEnrolledStudents(offering.id);
+            const isExpanded = expandedOfferings.has(offering.id);
+            const totalFees = offering.registrationFee + offering.materialsFee + offering.instructionalFee;
+            const spotsAvailable = offering.maxStudents - enrolledStudents.length;
             
             return (
-              <div key={schedule.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div key={offering.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-3">
@@ -231,19 +187,20 @@ const SchedulesTab = () => {
                       </div>
                       <div>
                         <h3 className="text-xl font-semibold text-gray-900">
-                          {offering?.className || 'Unknown Class'} - {getDayName(schedule.dayOfWeek)}
+                          {offering.className}
                         </h3>
                         <div className="flex items-center space-x-4 text-sm text-gray-600">
+                          <span>{offering.term}</span>
                           <div className="flex items-center space-x-1">
                             <Clock className="h-4 w-4" />
-                            <span>{formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}</span>
+                            <span>{formatDaysOfWeek(offering.daysOfWeek)} • {formatTime(offering.startTime)} - {formatTime(offering.endTime)}</span>
                           </div>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            schedule.isActive 
+                            offering.isActive 
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-gray-100 text-gray-800'
                           }`}>
-                            {schedule.isActive ? 'Active' : 'Inactive'}
+                            {offering.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
                       </div>
@@ -254,7 +211,9 @@ const SchedulesTab = () => {
                         <MapPin className="h-4 w-4 text-gray-400" />
                         <div>
                           <div className="text-sm font-medium text-gray-900">Location</div>
-                          <div className="text-sm text-gray-600">{schedule.location}</div>
+                          <div className="text-sm text-gray-600">
+                            {offering.deliveryMethod === 'virtual' ? 'Virtual' : offering.location || 'On Site'}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -262,7 +221,7 @@ const SchedulesTab = () => {
                         <div>
                           <div className="text-sm font-medium text-gray-900">Instructor</div>
                           <div className="text-sm text-gray-600">
-                            {teacher ? `${teacher.firstName} ${teacher.lastName}` : 'Unknown Teacher'}
+                            {teacher ? `${teacher.firstName} ${teacher.lastName}` : 'Unassigned'}
                           </div>
                         </div>
                       </div>
@@ -271,8 +230,7 @@ const SchedulesTab = () => {
                         <div>
                           <div className="text-sm font-medium text-gray-900">Enrollment</div>
                           <div className="text-sm text-gray-600">
-                            {enrolledStudents.length}
-                            {schedule.maxStudents && ` / ${schedule.maxStudents}`} students
+                            {enrolledStudents.length} / {offering.maxStudents} students
                           </div>
                         </div>
                       </div>
@@ -281,22 +239,42 @@ const SchedulesTab = () => {
                         <div>
                           <div className="text-sm font-medium text-gray-900">Duration</div>
                           <div className="text-sm text-gray-600">
-                            {formatDate(schedule.startDate)} - {formatDate(schedule.endDate)}
+                            {formatDate(offering.startDate)} - {formatDate(offering.stopDate)}
                           </div>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Enrollment Progress Bar */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">Class Capacity</span>
+                        <span className="text-sm text-gray-600">
+                          {spotsAvailable} spot{spotsAvailable !== 1 ? 's' : ''} available
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            enrolledStudents.length >= offering.maxStudents ? 'bg-red-500' :
+                            enrolledStudents.length >= offering.maxStudents * 0.8 ? 'bg-yellow-500' :
+                            'bg-green-500'
+                          }`}
+                          style={{ width: `${Math.min((enrolledStudents.length / offering.maxStudents) * 100, 100)}%` }}
+                        />
                       </div>
                     </div>
 
                     {/* Quick Actions */}
                     <div className="flex items-center space-x-3 mb-4">
                       <button
-                        onClick={() => handleManageStudents(schedule.id)}
+                        onClick={() => handleManageStudents(offering.id)}
                         className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-200 transition-colors duration-200 text-sm font-medium"
                       >
                         Manage Students ({enrolledStudents.length})
                       </button>
                       <button
-                        onClick={() => toggleScheduleExpansion(schedule.id)}
+                        onClick={() => toggleOfferingExpansion(offering.id)}
                         className="bg-gray-100 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium flex items-center space-x-1"
                       >
                         <span>{isExpanded ? 'Hide Details' : 'Show Details'}</span>
@@ -307,27 +285,45 @@ const SchedulesTab = () => {
                     {/* Expanded Details */}
                     {isExpanded && (
                       <div className="border-t border-gray-200 pt-4 space-y-4">
-                        {/* Schedule Details */}
+                        {/* Class Details */}
                         <div className="bg-gray-50 rounded-lg p-4">
-                          <h4 className="font-medium text-gray-900 mb-3">Schedule Details</h4>
+                          <h4 className="font-medium text-gray-900 mb-3">Class Details</h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div>
-                              <span className="font-medium text-gray-900">Recurring Weeks:</span>
-                              <span className="ml-2 text-gray-600">{schedule.recurringWeeks}</span>
+                              <span className="font-medium text-gray-900">Total Fees:</span>
+                              <span className="ml-2 text-gray-600">{formatCurrency(totalFees)}</span>
                             </div>
                             <div>
-                              <span className="font-medium text-gray-900">Class ID:</span>
-                              <span className="ml-2 text-gray-600">{schedule.offeringId.slice(-8)}</span>
+                              <span className="font-medium text-gray-900">Registration:</span>
+                              <span className="ml-2 text-gray-600">{formatCurrency(offering.registrationFee)}</span>
                             </div>
                             <div>
-                              <span className="font-medium text-gray-900">Created:</span>
-                              <span className="ml-2 text-gray-600">{formatDate(schedule.createdAt)}</span>
+                              <span className="font-medium text-gray-900">Materials:</span>
+                              <span className="ml-2 text-gray-600">{formatCurrency(offering.materialsFee)}</span>
                             </div>
                             <div>
-                              <span className="font-medium text-gray-900">Last Updated:</span>
-                              <span className="ml-2 text-gray-600">{formatDate(schedule.updatedAt)}</span>
+                              <span className="font-medium text-gray-900">Instruction:</span>
+                              <span className="ml-2 text-gray-600">{formatCurrency(offering.instructionalFee)}</span>
                             </div>
+                            {offering.ageRange && (
+                              <div>
+                                <span className="font-medium text-gray-900">Age Range:</span>
+                                <span className="ml-2 text-gray-600">{offering.ageRange}</span>
+                              </div>
+                            )}
+                            {offering.prerequisites && (
+                              <div className="md:col-span-2">
+                                <span className="font-medium text-gray-900">Prerequisites:</span>
+                                <span className="ml-2 text-gray-600">{offering.prerequisites}</span>
+                              </div>
+                            )}
                           </div>
+                          {offering.description && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <span className="font-medium text-gray-900">Description:</span>
+                              <p className="text-gray-600 mt-1">{offering.description}</p>
+                            </div>
+                          )}
                         </div>
 
                         {/* Enrolled Students */}
@@ -335,7 +331,7 @@ const SchedulesTab = () => {
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="font-medium text-gray-900">Enrolled Students</h4>
                             <button
-                              onClick={() => handleManageStudents(schedule.id)}
+                              onClick={() => handleManageStudents(offering.id)}
                               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                             >
                               Add/Remove Students
@@ -367,7 +363,7 @@ const SchedulesTab = () => {
                               <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                               <p className="text-sm text-gray-600">No students enrolled yet</p>
                               <button
-                                onClick={() => handleManageStudents(schedule.id)}
+                                onClick={() => handleManageStudents(offering.id)}
                                 className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
                               >
                                 Add Students
@@ -378,21 +374,6 @@ const SchedulesTab = () => {
                       </div>
                     )}
                   </div>
-
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => {
-                        setEditingSchedule(schedule);
-                        setShowModal(true);
-                      }}
-                      className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button className="p-2 text-gray-400 hover:text-red-600 transition-colors duration-200">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
                 </div>
               </div>
             );
@@ -400,49 +381,34 @@ const SchedulesTab = () => {
         </div>
       )}
 
-      {filteredSchedules.length === 0 && viewMode === 'list' && (
+      {filteredOfferings.length === 0 && viewMode === 'list' && (
         <div className="text-center py-12">
           <div className="text-gray-400 mb-4">
             <Calendar className="h-16 w-16 mx-auto" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No schedules found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No class schedules found</h3>
           <p className="text-gray-500 mb-6">
             {searchTerm 
               ? 'Try adjusting your search criteria.'
-              : 'Get started by creating your first class schedule.'
+              : 'Create class offerings in the Programs tab to see schedules here.'
             }
           </p>
           <button
-            onClick={() => {
-              setEditingSchedule(null);
-              setShowModal(true);
-            }}
-            className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto"
+            onClick={() => window.location.href = '/admin?tab=programs'}
+            className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200"
           >
-            <Plus className="h-5 w-5" />
-            <span>Create First Schedule</span>
+            Go to Programs
           </button>
         </div>
       )}
 
-      {/* Schedule Modal */}
-      {showModal && (
-        <ScheduleModal
-          schedule={editingSchedule || undefined}
-          teachers={teachers}
-          offerings={offerings}
-          onClose={() => setShowModal(false)}
-          onSaved={loadData}
-        />
-      )}
-
       {/* Student Schedule Modal */}
-      {showStudentModal && selectedScheduleId && (
+      {showStudentModal && selectedOfferingId && (
         <StudentScheduleModal
-          scheduleId={selectedScheduleId}
-          schedule={schedules.find(s => s.id === selectedScheduleId)!}
+          offeringId={selectedOfferingId}
+          offering={offerings.find(o => o.id === selectedOfferingId)!}
           students={students}
-          enrolledStudents={getEnrolledStudents(selectedScheduleId)}
+          enrolledStudents={getEnrolledStudents(selectedOfferingId)}
           onClose={() => setShowStudentModal(false)}
           onUpdated={loadData}
         />
