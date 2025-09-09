@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { X, Users, Plus, Minus, Search, User, Mail } from 'lucide-react';
-import { Schedule } from '../../../types/admin';
-import { Student } from '../../../types/program';
+import { Offering, Student } from '../../../types/program';
 import { studentService } from '../../../services/programService';
 
 interface StudentScheduleModalProps {
-  scheduleId: string;
-  schedule: Schedule;
+  offeringId: string;
+  offering: Offering;
   students: Student[];
   enrolledStudents: Student[];
   onClose: () => void;
@@ -14,8 +13,8 @@ interface StudentScheduleModalProps {
 }
 
 const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
-  scheduleId,
-  schedule,
+  offeringId,
+  offering,
   students,
   enrolledStudents,
   onClose,
@@ -40,8 +39,8 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
       newSelected.delete(studentId);
     } else {
       // Check capacity limit
-      if (schedule.maxStudents && newSelected.size >= schedule.maxStudents) {
-        alert(`Maximum capacity of ${schedule.maxStudents} students reached`);
+      if (newSelected.size >= offering.maxStudents) {
+        alert(`Maximum capacity of ${offering.maxStudents} students reached`);
         return;
       }
       newSelected.add(studentId);
@@ -56,10 +55,10 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
       const currentlyEnrolled = new Set(enrolledStudents.map(s => s.id));
       const newlySelected = new Set(selectedStudents);
 
-      // Students to add to the schedule
+      // Students to add to the offering
       const studentsToAdd = Array.from(newlySelected).filter(id => !currentlyEnrolled.has(id));
       
-      // Students to remove from the schedule
+      // Students to remove from the offering
       const studentsToRemove = Array.from(currentlyEnrolled).filter(id => !newlySelected.has(id));
 
       // Add students to offering
@@ -67,8 +66,8 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
         const student = students.find(s => s.id === studentId);
         if (student) {
           const updatedOfferings = [...student.enrolledOfferings];
-          if (!updatedOfferings.includes(schedule.offeringId)) {
-            updatedOfferings.push(schedule.offeringId);
+          if (!updatedOfferings.includes(offeringId)) {
+            updatedOfferings.push(offeringId);
             await studentService.updateStudent(studentId, {
               enrolledOfferings: updatedOfferings
             });
@@ -80,12 +79,17 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
       for (const studentId of studentsToRemove) {
         const student = students.find(s => s.id === studentId);
         if (student) {
-          const updatedOfferings = student.enrolledOfferings.filter(id => id !== schedule.offeringId);
+          const updatedOfferings = student.enrolledOfferings.filter(id => id !== offeringId);
           await studentService.updateStudent(studentId, {
             enrolledOfferings: updatedOfferings
           });
         }
       }
+
+      // Update offering's current enrollment count
+      await offeringService.updateOffering(offeringId, {
+        currentEnrollment: selectedStudents.size
+      });
 
       onUpdated();
       onClose();
@@ -96,9 +100,12 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
     }
   };
 
-  const getDayName = (dayOfWeek: number) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[dayOfWeek];
+  const formatDaysOfWeek = (daysOfWeek: number[]) => {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return daysOfWeek
+      .sort((a, b) => a - b)
+      .map(day => dayNames[day])
+      .join(', ');
   };
 
   const formatTime = (time: string) => {
@@ -117,7 +124,11 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Manage Students</h3>
             <p className="text-sm text-gray-600">
-              {getDayName(schedule.dayOfWeek)} • {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)} • {schedule.location}
+              {offering.className} • {offering.term}
+            </p>
+            <p className="text-sm text-gray-500">
+              {formatDaysOfWeek(offering.daysOfWeek)} • {formatTime(offering.startTime)} - {formatTime(offering.endTime)}
+              {offering.deliveryMethod === 'virtual' ? ' • Virtual' : offering.location ? ` • ${offering.location}` : ' • On Site'}
             </p>
           </div>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -133,17 +144,21 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-blue-900">Current Enrollment</h4>
                 <span className="text-sm text-blue-700">
-                  {selectedStudents.size}
-                  {schedule.maxStudents && ` / ${schedule.maxStudents}`} students
+                  {selectedStudents.size} / {offering.maxStudents} students
                 </span>
               </div>
-              {schedule.maxStudents && (
-                <div className="w-full bg-blue-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min((selectedStudents.size / schedule.maxStudents) * 100, 100)}%` }}
-                  />
-                </div>
+              <div className="w-full bg-blue-200 rounded-full h-3">
+                <div
+                  className={`h-3 rounded-full transition-all duration-300 ${
+                    selectedStudents.size >= offering.maxStudents ? 'bg-red-500' :
+                    selectedStudents.size >= offering.maxStudents * 0.8 ? 'bg-yellow-500' :
+                    'bg-blue-600'
+                  }`}
+                  style={{ width: `${Math.min((selectedStudents.size / offering.maxStudents) * 100, 100)}%` }}
+                />
+              </div>
+              {selectedStudents.size >= offering.maxStudents && (
+                <p className="text-sm text-red-700 mt-2">⚠️ Class is at maximum capacity</p>
               )}
             </div>
 
@@ -165,7 +180,7 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
               <div className="max-h-96 overflow-y-auto space-y-2">
                 {availableStudents.map((student) => {
                   const isSelected = selectedStudents.has(student.id);
-                  const isAtCapacity = schedule.maxStudents && selectedStudents.size >= schedule.maxStudents && !isSelected;
+                  const isAtCapacity = selectedStudents.size >= offering.maxStudents && !isSelected;
                   
                   return (
                     <div
@@ -216,10 +231,10 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
                           }`}
                           title={
                             isSelected 
-                              ? 'Remove from schedule' 
+                              ? 'Remove from class' 
                               : isAtCapacity
                               ? 'Class is at capacity'
-                              : 'Add to schedule'
+                              : 'Add to class'
                           }
                         >
                           {isSelected ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
@@ -274,7 +289,7 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
         <div className="flex justify-between items-center p-6 border-t border-gray-200 bg-gray-50">
           <div className="text-sm text-gray-600">
             {selectedStudents.size} student{selectedStudents.size !== 1 ? 's' : ''} selected
-            {schedule.maxStudents && ` (${schedule.maxStudents - selectedStudents.size} spots remaining)`}
+            {` (${offering.maxStudents - selectedStudents.size} spots remaining)`}
           </div>
           <div className="flex space-x-3">
             <button

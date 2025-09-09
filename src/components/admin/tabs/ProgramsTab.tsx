@@ -12,7 +12,7 @@ const ProgramsTab = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProgramModalOpen, setIsProgramModalOpen] = useState(false);
   const [isOfferingModalOpen, setIsOfferingModalOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
   const [editingOffering, setEditingOffering] = useState<Offering | null>(null);
@@ -22,7 +22,7 @@ const ProgramsTab = () => {
     category: 'private-lessons',
     isActive: true,
   });
-  const [newOffering, setNewOffering] = useState<Omit<Offering, 'id' | 'createdAt' | 'updatedAt'>>({
+  const [offeringForm, setOfferingForm] = useState<Omit<Offering, 'id' | 'createdAt' | 'updatedAt'>>({
     programId: '',
     className: '',
     term: '',
@@ -127,7 +127,7 @@ const ProgramsTab = () => {
       } else {
         await programService.createProgram(programForm);
       }
-      setIsModalOpen(false);
+      setIsProgramModalOpen(false);
       setEditingProgram(null);
       setProgramForm({
         name: '',
@@ -145,10 +145,10 @@ const ProgramsTab = () => {
     if (offering) {
       const { id, createdAt, updatedAt, ...rest } = offering;
       void id; void createdAt; void updatedAt;
-      setNewOffering(rest);
+      setOfferingForm(rest);
       setEditingOffering(offering);
     } else {
-      setNewOffering({
+      setOfferingForm({
         programId,
         className: '',
         term: '',
@@ -179,9 +179,9 @@ const ProgramsTab = () => {
     e.preventDefault();
     try {
       if (editingOffering) {
-        await offeringService.updateOffering(editingOffering.id, newOffering);
+        await offeringService.updateOffering(editingOffering.id, offeringForm);
       } else {
-        await offeringService.createOffering(newOffering);
+        await offeringService.createOffering(offeringForm);
       }
       setIsOfferingModalOpen(false);
       setEditingOffering(null);
@@ -192,17 +192,17 @@ const ProgramsTab = () => {
   };
 
   const handleDayToggle = (dayIndex: number) => {
-    const currentDays = [...newOffering.daysOfWeek];
+    const currentDays = [...offeringForm.daysOfWeek];
     const dayExists = currentDays.includes(dayIndex);
     
     if (dayExists) {
-      setNewOffering({
-        ...newOffering,
+      setOfferingForm({
+        ...offeringForm,
         daysOfWeek: currentDays.filter(d => d !== dayIndex)
       });
     } else {
-      setNewOffering({
-        ...newOffering,
+      setOfferingForm({
+        ...offeringForm,
         daysOfWeek: [...currentDays, dayIndex].sort()
       });
     }
@@ -234,7 +234,7 @@ const ProgramsTab = () => {
                 category: 'private-lessons',
                 isActive: true,
               });
-              setIsModalOpen(true);
+              setIsProgramModalOpen(true);
             }}
             className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2"
           >
@@ -332,7 +332,7 @@ const ProgramsTab = () => {
                           category: program.category,
                           isActive: program.isActive,
                         });
-                        setIsModalOpen(true);
+                        setIsProgramModalOpen(true);
                       }}
                       className="p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200"
                     >
@@ -505,7 +505,7 @@ const ProgramsTab = () => {
                   category: 'private-lessons',
                   isActive: true,
                 });
-                setIsModalOpen(true);
+                setIsProgramModalOpen(true);
               }}
               className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center space-x-2 mx-auto"
             >
@@ -517,7 +517,7 @@ const ProgramsTab = () => {
       </div>
 
       {/* Program Modal */}
-      {isModalOpen && (
+      {isProgramModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
             <h3 className="text-lg font-semibold mb-4">
@@ -571,7 +571,7 @@ const ProgramsTab = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setIsModalOpen(false);
+                    setIsProgramModalOpen(false);
                     setEditingProgram(null);
                     setProgramForm({
                       name: '',
@@ -611,8 +611,8 @@ const ProgramsTab = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Class Name *</label>
                     <input
                       type="text"
-                      value={newOffering.className}
-                      onChange={(e) => setNewOffering({ ...newOffering, className: e.target.value })}
+                      value={offeringForm.className}
+                      onChange={(e) => setOfferingForm({ ...offeringForm, className: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       required
                     />
@@ -621,8 +621,8 @@ const ProgramsTab = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Term *</label>
                     <input
                       type="text"
-                      value={newOffering.term}
-                      onChange={(e) => setNewOffering({ ...newOffering, term: e.target.value })}
+                      value={offeringForm.term}
+                      onChange={(e) => setOfferingForm({ ...offeringForm, term: e.target.value })}
                       placeholder="e.g., Fall 2024, Spring 2025"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       required
@@ -634,8 +634,8 @@ const ProgramsTab = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Instructor *</label>
                   <select
-                    value={newOffering.teacherId}
-                    onChange={(e) => setNewOffering({ ...newOffering, teacherId: e.target.value })}
+                    value={offeringForm.teacherId}
+                    onChange={(e) => setOfferingForm({ ...offeringForm, teacherId: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     required
                   >
@@ -649,12 +649,15 @@ const ProgramsTab = () => {
                   </select>
                 </div>
 
-                {/* Schedule Setup */}
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-4">Class Schedule</h4>
+                {/* Enhanced Schedule Setup */}
+                <div className="border border-gray-200 rounded-lg p-6">
+                  <h4 className="font-medium text-gray-900 mb-4 flex items-center space-x-2">
+                    <Calendar className="h-5 w-5 text-indigo-600" />
+                    <span>Class Schedule</span>
+                  </h4>
                   
-                  {/* Days of Week */}
-                  <div className="mb-4">
+                  {/* Days of Week Selection */}
+                  <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-3">Class Days *</label>
                     <div className="grid grid-cols-7 gap-2">
                       {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
@@ -662,29 +665,38 @@ const ProgramsTab = () => {
                           key={index}
                           type="button"
                           onClick={() => handleDayToggle(index)}
-                          className={`p-2 text-sm font-medium rounded-lg border transition-colors duration-200 ${
-                            newOffering.daysOfWeek.includes(index)
-                              ? 'bg-indigo-600 text-white border-indigo-600'
-                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          className={`p-3 text-sm font-medium rounded-lg border-2 transition-all duration-200 ${
+                            offeringForm.daysOfWeek.includes(index)
+                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105'
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-indigo-50 hover:border-indigo-300'
                           }`}
                         >
                           {day}
                         </button>
                       ))}
                     </div>
-                    {newOffering.daysOfWeek.length === 0 && (
-                      <p className="text-sm text-red-600 mt-1">Please select at least one day</p>
+                    {offeringForm.daysOfWeek.length === 0 && (
+                      <p className="text-sm text-red-600 mt-2 flex items-center space-x-1">
+                        <span>⚠️</span>
+                        <span>Please select at least one day for the class</span>
+                      </p>
+                    )}
+                    {offeringForm.daysOfWeek.length > 0 && (
+                      <p className="text-sm text-green-600 mt-2 flex items-center space-x-1">
+                        <span>✓</span>
+                        <span>Class will meet on: {formatDaysOfWeek(offeringForm.daysOfWeek)}</span>
+                      </p>
                     )}
                   </div>
 
                   {/* Time Range */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="grid grid-cols-2 gap-4 mb-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Start Time *</label>
                       <input
                         type="time"
-                        value={newOffering.startTime}
-                        onChange={(e) => setNewOffering({ ...newOffering, startTime: e.target.value })}
+                        value={offeringForm.startTime}
+                        onChange={(e) => setOfferingForm({ ...offeringForm, startTime: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         required
                       />
@@ -693,8 +705,8 @@ const ProgramsTab = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">End Time *</label>
                       <input
                         type="time"
-                        value={newOffering.endTime}
-                        onChange={(e) => setNewOffering({ ...newOffering, endTime: e.target.value })}
+                        value={offeringForm.endTime}
+                        onChange={(e) => setOfferingForm({ ...offeringForm, endTime: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         required
                       />
@@ -704,26 +716,39 @@ const ProgramsTab = () => {
                   {/* Date Range */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Class Start Date *</label>
                       <input
                         type="date"
-                        value={newOffering.startDate.toISOString().split('T')[0]}
-                        onChange={(e) => setNewOffering({ ...newOffering, startDate: new Date(e.target.value) })}
+                        value={offeringForm.startDate.toISOString().split('T')[0]}
+                        onChange={(e) => setOfferingForm({ ...offeringForm, startDate: new Date(e.target.value) })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Class End Date *</label>
                       <input
                         type="date"
-                        value={newOffering.stopDate.toISOString().split('T')[0]}
-                        onChange={(e) => setNewOffering({ ...newOffering, stopDate: new Date(e.target.value) })}
+                        value={offeringForm.stopDate.toISOString().split('T')[0]}
+                        onChange={(e) => setOfferingForm({ ...offeringForm, stopDate: new Date(e.target.value) })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         required
                       />
                     </div>
                   </div>
+
+                  {/* Schedule Preview */}
+                  {offeringForm.daysOfWeek.length > 0 && offeringForm.startTime && offeringForm.endTime && (
+                    <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
+                      <h5 className="text-sm font-medium text-indigo-900 mb-1">Schedule Preview</h5>
+                      <p className="text-sm text-indigo-700">
+                        {formatDaysOfWeek(offeringForm.daysOfWeek)} from {formatTime(offeringForm.startTime)} to {formatTime(offeringForm.endTime)}
+                      </p>
+                      <p className="text-xs text-indigo-600 mt-1">
+                        Classes run from {formatDate(offeringForm.startDate)} to {formatDate(offeringForm.stopDate)}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Location & Delivery */}
@@ -731,26 +756,40 @@ const ProgramsTab = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Method *</label>
                     <select
-                      value={newOffering.deliveryMethod}
-                      onChange={(e) => setNewOffering({ ...newOffering, deliveryMethod: e.target.value as 'onsite' | 'virtual' })}
+                      value={offeringForm.deliveryMethod}
+                      onChange={(e) => setOfferingForm({ ...offeringForm, deliveryMethod: e.target.value as 'onsite' | 'virtual' })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     >
                       <option value="onsite">On Site</option>
                       <option value="virtual">Virtual</option>
                     </select>
                   </div>
-                  {newOffering.deliveryMethod === 'onsite' && (
+                  {offeringForm.deliveryMethod === 'onsite' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
                       <input
                         type="text"
-                        value={newOffering.location}
-                        onChange={(e) => setNewOffering({ ...newOffering, location: e.target.value })}
+                        value={offeringForm.location}
+                        onChange={(e) => setOfferingForm({ ...offeringForm, location: e.target.value })}
                         placeholder="e.g., Studio A, Main Hall"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                   )}
+                </div>
+
+                {/* Capacity */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Maximum Students *</label>
+                  <input
+                    type="number"
+                    value={offeringForm.maxStudents}
+                    onChange={(e) => setOfferingForm({ ...offeringForm, maxStudents: parseInt(e.target.value) || 1 })}
+                    min="1"
+                    max="50"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                  />
                 </div>
 
                 {/* Pricing */}
@@ -761,8 +800,8 @@ const ProgramsTab = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Registration Fee</label>
                       <input
                         type="number"
-                        value={newOffering.registrationFee}
-                        onChange={(e) => setNewOffering({ ...newOffering, registrationFee: parseFloat(e.target.value) || 0 })}
+                        value={offeringForm.registrationFee}
+                        onChange={(e) => setOfferingForm({ ...offeringForm, registrationFee: parseFloat(e.target.value) || 0 })}
                         min="0"
                         step="0.01"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -772,8 +811,8 @@ const ProgramsTab = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Materials Fee</label>
                       <input
                         type="number"
-                        value={newOffering.materialsFee}
-                        onChange={(e) => setNewOffering({ ...newOffering, materialsFee: parseFloat(e.target.value) || 0 })}
+                        value={offeringForm.materialsFee}
+                        onChange={(e) => setOfferingForm({ ...offeringForm, materialsFee: parseFloat(e.target.value) || 0 })}
                         min="0"
                         step="0.01"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -783,8 +822,8 @@ const ProgramsTab = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">Instructional Fee *</label>
                       <input
                         type="number"
-                        value={newOffering.instructionalFee}
-                        onChange={(e) => setNewOffering({ ...newOffering, instructionalFee: parseFloat(e.target.value) || 0 })}
+                        value={offeringForm.instructionalFee}
+                        onChange={(e) => setOfferingForm({ ...offeringForm, instructionalFee: parseFloat(e.target.value) || 0 })}
                         min="0"
                         step="0.01"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -793,53 +832,41 @@ const ProgramsTab = () => {
                     </div>
                   </div>
                   <div className="mt-3 text-sm text-gray-600">
-                    Total: {formatCurrency(newOffering.registrationFee + newOffering.materialsFee + newOffering.instructionalFee)}
+                    <span className="font-medium">Total per student:</span> {formatCurrency(offeringForm.registrationFee + offeringForm.materialsFee + offeringForm.instructionalFee)}
                   </div>
                 </div>
 
                 {/* Additional Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Students *</label>
-                    <input
-                      type="number"
-                      value={newOffering.maxStudents}
-                      onChange={(e) => setNewOffering({ ...newOffering, maxStudents: parseInt(e.target.value) || 1 })}
-                      min="1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      required
-                    />
-                  </div>
-                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Age Range</label>
                     <input
                       type="text"
-                      value={newOffering.ageRange}
-                      onChange={(e) => setNewOffering({ ...newOffering, ageRange: e.target.value })}
+                      value={offeringForm.ageRange}
+                      onChange={(e) => setOfferingForm({ ...offeringForm, ageRange: e.target.value })}
                       placeholder="e.g., 8-12 years"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Prerequisites</label>
+                    <input
+                      type="text"
+                      value={offeringForm.prerequisites}
+                      onChange={(e) => setOfferingForm({ ...offeringForm, prerequisites: e.target.value })}
+                      placeholder="e.g., Basic music reading skills"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Prerequisites</label>
-                  <input
-                    type="text"
-                    value={newOffering.prerequisites}
-                    onChange={(e) => setNewOffering({ ...newOffering, prerequisites: e.target.value })}
-                    placeholder="e.g., Basic music reading skills"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Class Description</label>
                   <textarea
-                    value={newOffering.description}
-                    onChange={(e) => setNewOffering({ ...newOffering, description: e.target.value })}
+                    value={offeringForm.description}
+                    onChange={(e) => setOfferingForm({ ...offeringForm, description: e.target.value })}
                     rows={3}
-                    placeholder="Detailed description of the class..."
+                    placeholder="Detailed description of the class content and objectives..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                 </div>
@@ -849,10 +876,12 @@ const ProgramsTab = () => {
                     id="offeringActive"
                     type="checkbox"
                     className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                    checked={newOffering.isActive}
-                    onChange={(e) => setNewOffering({ ...newOffering, isActive: e.target.checked })}
+                    checked={offeringForm.isActive}
+                    onChange={(e) => setOfferingForm({ ...offeringForm, isActive: e.target.checked })}
                   />
-                  <label htmlFor="offeringActive" className="ml-2 block text-sm text-gray-700">Active</label>
+                  <label htmlFor="offeringActive" className="ml-2 block text-sm text-gray-700">
+                    Active (visible to students for enrollment)
+                  </label>
                 </div>
 
                 <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
@@ -865,10 +894,10 @@ const ProgramsTab = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={newOffering.daysOfWeek.length === 0}
+                    disabled={offeringForm.daysOfWeek.length === 0}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                   >
-                    {editingOffering ? 'Save Changes' : 'Create Offering'}
+                    {editingOffering ? 'Save Changes' : 'Create Class Offering'}
                   </button>
                 </div>
               </form>
