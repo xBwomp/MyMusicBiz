@@ -76,7 +76,7 @@ export const offeringService = {
   // Get all offerings
   async getOfferings(): Promise<Offering[]> {
     const querySnapshot = await getDocs(
-      query(collection(db, 'offerings'), orderBy('startDate', 'desc'))
+      query(collection(db, 'offerings'), orderBy('startDate', 'asc'))
     );
     return querySnapshot.docs.map(doc => ({
       id: doc.id,

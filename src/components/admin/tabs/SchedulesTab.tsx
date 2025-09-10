@@ -46,6 +46,16 @@ const SchedulesTab = () => {
     }
   };
 
+  const getTeacher = (teacherId: string) => {
+    return teachers.find(t => t.id === teacherId);
+  };
+
+  const getEnrolledStudents = (offeringId: string) => {
+    return students.filter(student => 
+      student.enrolledOfferings.includes(offeringId)
+    );
+  };
+
   const filteredOfferings = useMemo(() => {
     return offerings.filter(offering => {
       const searchLower = searchTerm.toLowerCase();
@@ -64,16 +74,6 @@ const SchedulesTab = () => {
       return matchesSearch && matchesTeacher && matchesStatus;
     });
   }, [offerings, searchTerm, filterTeacher, filterStatus, teachers]);
-
-  const getTeacher = (teacherId: string) => {
-    return teachers.find(t => t.id === teacherId);
-  };
-
-  const getEnrolledStudents = (offeringId: string) => {
-    return students.filter(student => 
-      student.enrolledOfferings.includes(offeringId)
-    );
-  };
 
   const toggleOfferingExpansion = (offeringId: string) => {
     const newExpanded = new Set(expandedOfferings);
@@ -294,7 +294,7 @@ const SchedulesTab = () => {
                         <div>
                           <div className="text-sm font-medium text-gray-900">Duration</div>
                           <div className="text-sm text-gray-600">
-                            {formatDate(offering.startDate)} - {formatDate(offering.stopDate)}
+                            {formatDate(new Date(offering.startDate))} - {formatDate(new Date(offering.stopDate))}
                           </div>
                         </div>
                       </div>
@@ -428,7 +428,7 @@ const SchedulesTab = () => {
                                     <div className="font-medium text-gray-900 text-sm">
                                       {student.firstName} {student.lastName}
                                     </div>
-                                    <div className="text-xs text-gray-500">
+                                    <div className="text-xs text.ts-gray-500">
                                       {student.grade && `Grade ${student.grade}`}
                                       {student.grade && student.instrument && ' • '}
                                       {student.instrument}

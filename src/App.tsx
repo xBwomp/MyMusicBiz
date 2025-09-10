@@ -1,14 +1,8 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Header from './components/Header';
-import Hero from './components/Hero';
-import Features from './components/Features';
-import Programs from './components/Programs';
-import About from './components/About';
-import Contact from './components/Contact';
-import Footer from './components/Footer';
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
 const LearnerPortal = lazy(() => import('./components/learner/LearnerPortal'));
+const HomePage = lazy(() => import('./components/HomePage'));
 
 function App() {
   return (
@@ -22,17 +16,7 @@ function App() {
           <Routes>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/portal" element={<LearnerPortal />} />
-            <Route path="/" element={
-              <>
-                <Header />
-                <Hero />
-                <Features />
-                <Programs />
-                <About />
-                <Contact />
-                <Footer />
-              </>
-            } />
+            <Route path="/" element={<HomePage />} />
           </Routes>
         </Suspense>
       </div>

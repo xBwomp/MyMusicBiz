@@ -33,11 +33,10 @@ export const generateCalendarEvents = (offering: Offering): CalendarEvent[] => {
   // Generate events for each day of the week in the offering
   offering.daysOfWeek.forEach(dayOfWeek => {
     let currentDate = new Date(startDate);
-    
+
     // Find the first occurrence of this day of week on or after start date
-    while (currentDate.getDay() !== dayOfWeek && currentDate <= endDate) {
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
+    const dayDifference = (dayOfWeek - currentDate.getDay() + 7) % 7;
+    currentDate.setDate(currentDate.getDate() + dayDifference);
 
     // Generate recurring events for this day of week
     while (currentDate <= endDate) {
@@ -83,11 +82,10 @@ export const getOfferingClassDates = (offering: Offering): Date[] => {
 
   offering.daysOfWeek.forEach(dayOfWeek => {
     let currentDate = new Date(startDate);
-    
+
     // Find the first occurrence of this day of week on or after start date
-    while (currentDate.getDay() !== dayOfWeek && currentDate <= endDate) {
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
+    const dayDifference = (dayOfWeek - currentDate.getDay() + 7) % 7;
+    currentDate.setDate(currentDate.getDate() + dayDifference);
 
     // Generate recurring dates for this day of week
     while (currentDate <= endDate) {

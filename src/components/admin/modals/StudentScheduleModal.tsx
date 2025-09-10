@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Users, Plus, Minus, Search, User, Mail } from 'lucide-react';
 import { Offering, Student } from '../../../types/program';
-import { studentService } from '../../../services/programService';
+import { studentService, offeringService } from '../../../services/programService';
 
 interface StudentScheduleModalProps {
   offeringId: string;
@@ -26,8 +26,8 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
   );
   const [saving, setSaving] = useState(false);
 
-  const availableStudents = students.filter(student => 
-    student.isActive && 
+  const availableStudents = students.filter(student =>
+    student.status === 'active' &&
     (student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
      student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
      student.email.toLowerCase().includes(searchTerm.toLowerCase()))
