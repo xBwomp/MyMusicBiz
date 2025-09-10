@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Users, Plus, Minus, Search, User, Mail } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Plus, Minus, Search, User, Mail } from 'lucide-react';
 import { Offering, Student } from '../../../types/program';
 import { studentService, offeringService } from '../../../services/programService';
 
@@ -25,9 +25,18 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
     new Set(enrolledStudents.map(s => s.id))
   );
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Create a Map for fast student lookup
+  const studentMap = React.useMemo(() => {
+    const map = new Map<string, Student>();
+    students.forEach(s => map.set(s.id, s));
+    return map;
+  }, [students]);
 
   const availableStudents = students.filter(student =>
-    student.status !== 'Inactive' &&
+    
+    student.status?.toLowerCase() !== 'inactive' &&
     (student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
      student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
      student.email.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -50,20 +59,26 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
 
   const handleSave = async () => {
     setSaving(true);
+    setError(null);
     try {
+      // Enforce capacity limit strictly
+      if (selectedStudents.size > offering.maxStudents) {
+        setError(`Cannot save: selected students exceed class capacity (${offering.maxStudents}).`);
+        setSaving(false);
+        return;
+      }
       // Update each student's enrolled offerings
       const currentlyEnrolled = new Set(enrolledStudents.map(s => s.id));
       const newlySelected = new Set(selectedStudents);
 
       // Students to add to the offering
       const studentsToAdd = Array.from(newlySelected).filter(id => !currentlyEnrolled.has(id));
-      
       // Students to remove from the offering
       const studentsToRemove = Array.from(currentlyEnrolled).filter(id => !newlySelected.has(id));
 
       // Add students to offering
       for (const studentId of studentsToAdd) {
-        const student = students.find(s => s.id === studentId);
+        const student = studentMap.get(studentId);
         if (student) {
           const updatedOfferings = [...student.enrolledOfferings];
           if (!updatedOfferings.includes(offeringId)) {
@@ -77,7 +92,7 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
 
       // Remove students from offering
       for (const studentId of studentsToRemove) {
-        const student = students.find(s => s.id === studentId);
+        const student = studentMap.get(studentId);
         if (student) {
           const updatedOfferings = student.enrolledOfferings.filter(id => id !== offeringId);
           await studentService.updateStudent(studentId, {
@@ -93,8 +108,9 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
 
       onUpdated();
       onClose();
-    } catch (error) {
-      console.error('Error updating student enrollments:', error);
+    } catch (err) {
+      setError('Error updating student enrollments. Please try again.');
+      console.error('Error updating student enrollments:', err);
     } finally {
       setSaving(false);
     }
@@ -117,12 +133,17 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="student-schedule-modal-title"
+    >
       <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Manage Students</h3>
+            <h3 id="student-schedule-modal-title" className="text-lg font-semibold text-gray-900">Manage Students</h3>
             <p className="text-sm text-gray-600">
               {offering.className} • {offering.term}
             </p>
@@ -139,6 +160,12 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
+            {/* Error UI */}
+            {error && (
+              <div className="bg-red-100 border border-red-300 text-red-800 rounded-lg p-3 mb-4">
+                {error}
+              </div>
+            )}
             {/* Current Enrollment Status */}
             <div className="bg-blue-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
@@ -263,7 +290,7 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {Array.from(selectedStudents).map(studentId => {
-                    const student = students.find(s => s.id === studentId);
+                    const student = studentMap.get(studentId);
                     return student ? (
                       <span
                         key={studentId}
