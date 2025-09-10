@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, AlertCircle, Calendar, Download } from 'lucide-react';
 import { enrollmentService } from '../../../services/adminService';
+import { offeringService, studentService } from '../../../services/programService';
 import { Enrollment } from '../../../types/admin';
+import { Offering, Student } from '../../../types/program';
 
 const FinancesTab = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [offerings, setOfferings] = useState<Offering[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('current-month');
 
@@ -14,8 +18,14 @@ const FinancesTab = () => {
 
   const loadFinancialData = async () => {
     try {
-      const enrollmentsData = await enrollmentService.getEnrollments();
+      const [enrollmentsData, offeringsData, studentsData] = await Promise.all([
+        enrollmentService.getEnrollments(),
+        offeringService.getOfferings(),
+        studentService.getStudents()
+      ]);
       setEnrollments(enrollmentsData);
+      setOfferings(offeringsData);
+      setStudents(studentsData);
     } catch (error) {
       console.error('Error loading financial data:', error);
     } finally {
@@ -24,8 +34,33 @@ const FinancesTab = () => {
   };
 
   const calculateFinancialStats = () => {
-    const totalRevenue = enrollments.reduce((sum, e) => sum + e.paidAmount, 0);
-    const totalOutstanding = enrollments.reduce((sum, e) => sum + (e.totalFees - e.paidAmount), 0);
+    const today = new Date();
+    let totalRevenue = 0;
+    let totalPaymentsReceived = 0;
+    
+    // Calculate revenue from classes that have started or are in progress
+    offerings.forEach(offering => {
+      // Only count revenue from classes that have started
+      if (offering.startDate <= today && offering.isActive) {
+        // Get enrolled students for this offering
+        const enrolledStudents = students.filter(student => 
+          student.enrolledOfferings.includes(offering.id) && student.isActive
+        );
+        
+        // Calculate total fees for this offering
+        const totalOfferingFees = offering.registrationFee + offering.materialsFee + offering.instructionalFee;
+        
+        // Add to total revenue (enrolled students × total fees)
+        totalRevenue += enrolledStudents.length * totalOfferingFees;
+      }
+    });
+    
+    // Calculate total payments received from enrollments
+    totalPaymentsReceived = enrollments.reduce((sum, e) => sum + e.paidAmount, 0);
+    
+    // Outstanding is the difference between expected revenue and payments received
+    const totalOutstanding = totalRevenue - totalPaymentsReceived;
+    
     const overdueAmount = enrollments
       .filter(e => e.paymentStatus === 'overdue')
       .reduce((sum, e) => sum + (e.totalFees - e.paidAmount), 0);
@@ -33,6 +68,7 @@ const FinancesTab = () => {
 
     return {
       totalRevenue,
+      totalPaymentsReceived,
       totalOutstanding,
       overdueAmount,
       totalEnrollments,
@@ -97,12 +133,23 @@ const FinancesTab = () => {
       </div>
 
       {/* Financial Stats */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h3 className="text-sm font-medium text-blue-900 mb-2">Revenue Calculation Method</h3>
+        <p className="text-sm text-blue-800">
+          <strong>Total Revenue:</strong> Sum of (Class Fees × Enrolled Students) for all active classes that have started or are in progress.
+        </p>
+        <p className="text-sm text-blue-800 mt-1">
+          <strong>Outstanding Balance:</strong> Total Revenue minus actual payments received.
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Revenue</p>
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
+              <p className="text-xs text-gray-500 mt-1">From active classes × enrolled students</p>
             </div>
             <div className="p-3 rounded-full bg-green-100">
               <DollarSign className="h-6 w-6 text-green-600" />
@@ -118,8 +165,9 @@ const FinancesTab = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Outstanding</p>
+              <p className="text-sm font-medium text-gray-600">Outstanding Balance</p>
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalOutstanding)}</p>
+              <p className="text-xs text-gray-500 mt-1">Revenue minus payments received</p>
             </div>
             <div className="p-3 rounded-full bg-yellow-100">
               <Calendar className="h-6 w-6 text-yellow-600" />
@@ -127,7 +175,7 @@ const FinancesTab = () => {
           </div>
           <div className="mt-4 flex items-center">
             <span className="text-sm text-gray-500">
-              {enrollments.filter(e => e.totalFees > e.paidAmount).length} pending payments
+              ${formatCurrency(stats.totalPaymentsReceived)} received of ${formatCurrency(stats.totalRevenue)} expected
             </span>
           </div>
         </div>
