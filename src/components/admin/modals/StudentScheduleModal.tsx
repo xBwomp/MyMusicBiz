@@ -27,7 +27,7 @@ const StudentScheduleModal: React.FC<StudentScheduleModalProps> = ({
   const [saving, setSaving] = useState(false);
 
   const availableStudents = students.filter(student =>
-    student.status === 'active' &&
+    student.status !== 'Inactive' &&
     (student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
      student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
      student.email.toLowerCase().includes(searchTerm.toLowerCase()))
