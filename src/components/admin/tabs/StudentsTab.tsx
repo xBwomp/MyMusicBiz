@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Mail, Phone, Calendar } from 'lucide-react';
-import { Student } from '../../../types/program';
+import { Student, Offering } from '../../../types/program';
 import { StudentStatus } from '../../../types/status';
-import { studentService } from '../../../services/programService';
+import { studentService, offeringService } from '../../../services/programService';
 import StudentModal from '../modals/StudentModal';
 import StatusDropdown from '../../common/StatusDropdown';
 import StatusHistory from '../../common/StatusHistory';
@@ -11,6 +11,7 @@ import { useAdmin } from '../../../hooks/useAdmin';
 const StudentsTab = () => {
   const { userProfile } = useAdmin();
   const [students, setStudents] = useState<Student[]>([]);
+  const [offerings, setOfferings] = useState<Offering[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -18,18 +19,27 @@ const StudentsTab = () => {
   const [showStatusHistory, setShowStatusHistory] = useState<string | null>(null);
 
   useEffect(() => {
-    loadStudents();
+    loadData();
   }, []);
 
-  const loadStudents = async () => {
+  const loadData = async () => {
     try {
-      const studentsData = await studentService.getStudents();
+      const [studentsData, offeringsData] = await Promise.all([
+        studentService.getStudents(),
+        offeringService.getOfferings()
+      ]);
       setStudents(studentsData);
+      setOfferings(offeringsData);
     } catch (error) {
-      console.error('Error loading students:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getOfferingName = (offeringId: string) => {
+    const offering = offerings.find(o => o.id === offeringId);
+    return offering ? offering.className : `Class ID: ${offeringId.slice(-6)}`;
   };
 
   const filteredStudents = students.filter(student => {
@@ -63,7 +73,7 @@ const StudentsTab = () => {
 
   const handleStatusChange = async (studentId: string, newStatus: string) => {
     // Reload students to reflect the status change
-    await loadStudents();
+    await loadData();
   };
 
   if (loading) {
@@ -184,14 +194,17 @@ const StudentsTab = () => {
                   <div className="mb-4">
                     <h4 className="text-sm font-medium text-gray-900 mb-2">Enrolled Classes</h4>
                     <div className="flex flex-wrap gap-2">
-                      {student.enrolledOfferings.map((offeringId, index) => (
+                      {student.enrolledOfferings.map((offeringId, index) => {
+                        const offeringName = getOfferingName(offeringId);
+                        return (
                         <span
                           key={index}
                           className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium"
                         >
-                          Class ID: {offeringId.slice(-6)}
+                          {offeringName}
                         </span>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -266,7 +279,7 @@ const StudentsTab = () => {
         <StudentModal
           student={editingStudent || undefined}
           onClose={() => setShowModal(false)}
-          onSaved={loadStudents}
+          onSaved={loadData}
         />
       )}
     </div>
